@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "dgSpecHash": "U8/zUJf5Y4sjkt1IRt2yw8pcgwXsVyRb5e4A9UPSiczf/bjfZlQDsTNdLiGKJRpQVSYeQL61Fq7/N+lRLsTMQw==",
+  "success": true,
+  "projectFilePath": "D:\\code\\SadConsole\\SMPL\\SMPL.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\PC PC\\.nuget\\packages\\csfml\\2.5.0\\csfml.2.5.0.nupkg.sha512",
+    "C:\\Users\\PC PC\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512",
+    "C:\\Users\\PC PC\\.nuget\\packages\\sadconsole\\9.2.2\\sadconsole.9.2.2.nupkg.sha512",
+    "C:\\Users\\PC PC\\.nuget\\packages\\sadconsole.host.sfml\\9.2.1\\sadconsole.host.sfml.9.2.1.nupkg.sha512",
+    "C:\\Users\\PC PC\\.nuget\\packages\\sfml.audio\\2.5.0\\sfml.audio.2.5.0.nupkg.sha512",
+    "C:\\Users\\PC PC\\.nuget\\packages\\sfml.graphics\\2.5.0\\sfml.graphics.2.5.0.nupkg.sha512",
+    "C:\\Users\\PC PC\\.nuget\\packages\\sfml.net\\2.5.0\\sfml.net.2.5.0.nupkg.sha512",
+    "C:\\Users\\PC PC\\.nuget\\packages\\sfml.system\\2.5.0\\sfml.system.2.5.0.nupkg.sha512",
+    "C:\\Users\\PC PC\\.nuget\\packages\\sfml.window\\2.5.0\\sfml.window.2.5.0.nupkg.sha512",
+    "C:\\Users\\PC PC\\.nuget\\packages\\thesadrogue.primitives\\1.1.1\\thesadrogue.primitives.1.1.1.nupkg.sha512",
+    "C:\\Users\\PC PC\\.nuget\\packages\\thesadrogue.primitives.sfml\\1.0.0\\thesadrogue.primitives.sfml.1.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
