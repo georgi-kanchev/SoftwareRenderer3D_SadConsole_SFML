@@ -37,7 +37,10 @@ namespace SMPL
 			for (int i = 0; i < triangles.Length; i++)
 			{
 				triangles[i].UpdatePoints(Area, console, camera);
-				triangles[i].Draw(console, triangles[i].Image, true);
+
+				var clippedTrigs = triangles[i].GetClippedTriangles(console);
+				for (int j = 0; j < clippedTrigs.Length; j++)
+					clippedTrigs[j].Draw(console, clippedTrigs[j].Image, true);
 			}
 		}
 	}

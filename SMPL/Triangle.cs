@@ -15,17 +15,16 @@ namespace SMPL
 		public readonly Vertex[] vertsGlobal = new Vertex[3];
 		public readonly Vertex[] vertsCamera = new Vertex[3];
 
-		public Color Color { get; set; } = Color.White;
 		public Image Image { get; set; }
-
 		private float normalZ;
 
-		public Triangle(Vertex p1, Vertex p2, Vertex p3, Image image)
+		public Triangle(Vertex p1, Vertex p2, Vertex p3, Image image, float normalZ = 0)
 		{
 			vertsLocal = new Vertex[3] { p1, p2, p3 };
 			vertsGlobal = new Vertex[3] { p1, p2, p3 };
 			vertsCamera = new Vertex[3] { p1, p2, p3 };
 			Image = image;
+			this.normalZ = normalZ;
 		}
 
 		public void UpdatePoints(Area area, Console console, Camera camera)
@@ -43,8 +42,11 @@ namespace SMPL
 
 				vertsCamera[i].TexCoords = vertsLocal[i].TexCoords.FixAffineCoordinates(vertsGlobal[i].Position.Z, 80, 45);
 			}
-			normalZ = (vertsCamera[1].Position.X - vertsCamera[0].Position.X) * (vertsCamera[2].Position.Y - vertsCamera[0].Position.Y) -
-				(vertsCamera[1].Position.Y - vertsCamera[0].Position.Y) * (vertsCamera[2].Position.X - vertsCamera[0].Position.X);
+
+			var p0 = vertsCamera[0].Position;
+			var p1 = vertsCamera[1].Position;
+			var p2 = vertsCamera[2].Position;
+			normalZ = (p1.X - p0.X) * (p2.Y - p0.Y) - (p1.Y - p0.Y) * (p2.X - p0.X);
 		}
 		public void Draw(Console console, Image image, bool cull)
 		{
@@ -208,24 +210,22 @@ namespace SMPL
 			}
 		}
 
-		public Triangle[] GetClippedTriangles()
+		public Triangle[] GetClippedTriangles(Console console)
 		{
 			var result = new Stack<Triangle>();
-			result.Push(new(vertsLocal[0], vertsLocal[1], vertsLocal[2], Image));
+			result.Push(new(vertsCamera[0], vertsCamera[1], vertsCamera[2], Image, normalZ));
 
-			var triangleCount = 0;
 			var _in = new List<Vertex>();
 			var _out = new List<Vertex>();
 
-			#region Left side of the screen
-			triangleCount = result.Count;
-			for (int i = 0; i < triangleCount; i++)
+			// sides of screen V
+
+			// left
+			for (int i = 0; i < result.Count; i++)
 			{
 				var currTriangle = result.Pop();
-
 				_in.Clear();
 				_out.Clear();
-
 				for (int j = 0; j < 3; j++)
 				{
 					var vert = currTriangle.vertsCamera[j];
@@ -234,67 +234,290 @@ namespace SMPL
 					else
 						_in.Add(vert);
 				}
-			}
 
-			if (_out.Count == 0)
-				result.Push(new(_in[0], _in[1], _in[2], Image));
-
-			else if (_out.Count == 1)
-			{
-				var extraPoint1 = new Vertex
+				if (_out.Count == 0)
+					result.Push(new(_in[0], _in[1], _in[2], Image, normalZ));
+				else if (_out.Count == 1)
 				{
-					Position = new(
-						0,
-						_out[0].Position.Y + (0 - _out[0].Position.X) * (_in[0].Position.Y - _out[0].Position.Y) / (_in[0].Position.X - _out[0].Position.X),
-						_out[0].Position.Z + (0 - _out[0].Position.X) * (_in[0].Position.Z - _out[0].Position.Z) / (_in[0].Position.X - _out[0].Position.X)),
-					TexCoords = new(
+					var extraPoint1 = new Vertex
+					{
+						Position = new(
+							0,
+							_out[0].Position.Y + (0 - _out[0].Position.X) * (_in[0].Position.Y - _out[0].Position.Y) / (_in[0].Position.X - _out[0].Position.X),
+							_out[0].Position.Z + (0 - _out[0].Position.X) * (_in[0].Position.Z - _out[0].Position.Z) / (_in[0].Position.X - _out[0].Position.X)),
+						TexCoords = new(
+							_out[0].TexCoords.X + (0 - _out[0].Position.X) * (_in[0].TexCoords.X - _out[0].TexCoords.X) / (_in[0].Position.X - _out[0].Position.X),
+							_out[0].TexCoords.Y + (0 - _out[0].Position.X) * (_in[0].TexCoords.Y - _out[0].TexCoords.Y) / (_in[0].Position.X - _out[0].Position.X),
+							_out[0].TexCoords.Z + (0 - _out[0].Position.X) * (_in[0].TexCoords.Z - _out[0].TexCoords.Z) / (_in[0].Position.X - _out[0].Position.X))
+					};
+					var extraPoint2 = new Vertex
+					{
+						Position = new(
+							0,
+							_out[0].Position.Y + (0 - _out[0].Position.X) * (_in[1].Position.Y - _out[0].Position.Y) / (_in[1].Position.X - _out[0].Position.X),
+							_out[0].Position.Z + (0 - _out[0].Position.X) * (_in[1].Position.Z - _out[0].Position.Z) / (_in[1].Position.X - _out[0].Position.X)),
+						TexCoords = new(
+							_out[0].TexCoords.X + (0 - _out[0].Position.X) * (_in[1].TexCoords.X - _out[0].TexCoords.X) / (_in[1].Position.X - _out[0].Position.X),
+							_out[0].TexCoords.Y + (0 - _out[0].Position.X) * (_in[1].TexCoords.Y - _out[0].TexCoords.Y) / (_in[1].Position.X - _out[0].Position.X),
+							_out[0].TexCoords.Z + (0 - _out[0].Position.X) * (_in[1].TexCoords.Z - _out[0].TexCoords.Z) / (_in[1].Position.X - _out[0].Position.X))
+					};
+
+					result.Push(new(extraPoint1, _in[0], _in[1], Image, normalZ));
+					result.Push(new(extraPoint2, extraPoint1, _in[1], Image, normalZ));
+				}
+				else if (_out.Count == 2)
+				{
+					var extraPoint1 = new Vertex
+					{
+						Position = new(
+							0,
+							_out[0].Position.Y + (0 - _out[0].Position.X) * (_in[0].Position.Y - _out[0].Position.Y) / (_in[0].Position.X - _out[0].Position.X),
+							_out[0].Position.Z + (0 - _out[0].Position.X) * (_in[0].Position.Z - _out[0].Position.Z) / (_in[0].Position.X - _out[0].Position.X)),
+						TexCoords = new(
 						_out[0].TexCoords.X + (0 - _out[0].Position.X) * (_in[0].TexCoords.X - _out[0].TexCoords.X) / (_in[0].Position.X - _out[0].Position.X),
 						_out[0].TexCoords.Y + (0 - _out[0].Position.X) * (_in[0].TexCoords.Y - _out[0].TexCoords.Y) / (_in[0].Position.X - _out[0].Position.X),
 						_out[0].TexCoords.Z + (0 - _out[0].Position.X) * (_in[0].TexCoords.Z - _out[0].TexCoords.Z) / (_in[0].Position.X - _out[0].Position.X))
-				};
-				var extraPoint2 = new Vertex
-				{
-					Position = new(
-						0,
-						_out[0].Position.Y + (0 - _out[0].Position.X) * (_in[1].Position.Y - _out[0].Position.Y) / (_in[1].Position.X - _out[0].Position.X),
-						_out[0].Position.Z + (0 - _out[0].Position.X) * (_in[1].Position.Z - _out[0].Position.Z) / (_in[1].Position.X - _out[0].Position.X)),
-					TexCoords = new(
-						_out[0].TexCoords.X + (0 - _out[0].Position.X) * (_in[1].TexCoords.X - _out[0].TexCoords.X) / (_in[1].Position.X - _out[0].Position.X),
-						_out[0].TexCoords.Y + (0 - _out[0].Position.X) * (_in[1].TexCoords.Y - _out[0].TexCoords.Y) / (_in[1].Position.X - _out[0].Position.X),
-						_out[0].TexCoords.Z + (0 - _out[0].Position.X) * (_in[1].TexCoords.Z - _out[0].TexCoords.Z) / (_in[1].Position.X - _out[0].Position.X))
-				};
+					};
+					var extraPoint2 = new Vertex
+					{
+						Position = new(
+							0,
+							_out[1].Position.Y + (0 - _out[1].Position.X) * (_in[0].Position.Y - _out[1].Position.Y) / (_in[0].Position.X - _out[1].Position.X),
+							_out[1].Position.Z + (0 - _out[1].Position.X) * (_in[0].Position.Z - _out[1].Position.Z) / (_in[0].Position.X - _out[1].Position.X)),
+						TexCoords = new(
+							_out[1].TexCoords.X + (0 - _out[1].Position.X) * (_in[0].TexCoords.X - _out[1].TexCoords.X) / (_in[0].Position.X - _out[1].Position.X),
+							_out[1].TexCoords.Y + (0 - _out[1].Position.X) * (_in[0].TexCoords.Y - _out[1].TexCoords.Y) / (_in[0].Position.X - _out[1].Position.X),
+							_out[1].TexCoords.Z + (0 - _out[1].Position.X) * (_in[0].TexCoords.Z - _out[1].TexCoords.Z) / (_in[0].Position.X - _out[1].Position.X))
+					};
 
-				result.Push(new(extraPoint1, _in[0], _in[1], Image));
-				result.Push(new(extraPoint2, extraPoint1, _in[1], Image));
+					result.Push(new(extraPoint1, extraPoint2, _in[0], Image, normalZ));
+				}
 			}
-			else if (_out.Count == 2)
+			// right
+			for (int i = 0; i < result.Count; i++)
 			{
-				var extraPoint1 = new Vertex
+				var currentTriangle = result.Pop();
+				_in.Clear();
+				_out.Clear();
+				for (int j = 0; j < 3; j++)
 				{
-					Position = new(
-						0,
-						_out[0].Position.Y + (0 - _out[0].Position.X) * (_in[0].Position.Y - _out[0].Position.Y) / (_in[0].Position.X - _out[0].Position.X),
-						_out[0].Position.Z + (0 - _out[0].Position.X) * (_in[0].Position.Z - _out[0].Position.Z) / (_in[0].Position.X - _out[0].Position.X)),
-					TexCoords = new(
-					_out[0].TexCoords.X + (0 - _out[0].Position.X) * (_in[0].TexCoords.X - _out[0].TexCoords.X) / (_in[0].Position.X - _out[0].Position.X),
-					_out[0].TexCoords.Y + (0 - _out[0].Position.X) * (_in[0].TexCoords.Y - _out[0].TexCoords.Y) / (_in[0].Position.X - _out[0].Position.X),
-					_out[0].TexCoords.Z + (0 - _out[0].Position.X) * (_in[0].TexCoords.Z - _out[0].TexCoords.Z) / (_in[0].Position.X - _out[0].Position.X))
-				};
-				var extraPoint2 = new Vertex
-				{
-					Position = new(
-						0,
-						_out[1].Position.Y + (0 - _out[1].Position.X) * (_in[0].Position.Y - _out[1].Position.Y) / (_in[0].Position.X - _out[1].Position.X),
-						_out[1].Position.Z + (0 - _out[1].Position.X) * (_in[0].Position.Z - _out[1].Position.Z) / (_in[0].Position.X - _out[1].Position.X)),
-					TexCoords = new(
-						_out[1].TexCoords.X + (0 - _out[1].Position.X) * (_in[0].TexCoords.X - _out[1].TexCoords.X) / (_in[0].Position.X - _out[1].Position.X),
-						_out[1].TexCoords.Y + (0 - _out[1].Position.X) * (_in[0].TexCoords.Y - _out[1].TexCoords.Y) / (_in[0].Position.X - _out[1].Position.X),
-						_out[1].TexCoords.Z + (0 - _out[1].Position.X) * (_in[0].TexCoords.Z - _out[1].TexCoords.Z) / (_in[0].Position.X - _out[1].Position.X))
-				};
+					var vert = currentTriangle.vertsCamera[j];
+					if (vert.Position.X >= console.Width)
+						_out.Add(vert);
+					else
+						_in.Add(vert);
+				}
 
-				result.Push(new(extraPoint1, extraPoint2, _in[0], Image));
+				var w = console.Width - 1;
+				if (_out.Count == 0)
+					result.Push(new(_in[0], _in[1], _in[2], Image, normalZ));
+				else if (_out.Count == 1)
+				{
+					var extraPoint1 = new Vertex
+					{
+						Position = new(
+							w,
+							_out[0].Position.Y + (w - _out[0].Position.X) * (_in[0].Position.Y - _out[0].Position.Y) / (_in[0].Position.X - _out[0].Position.X),
+							_out[0].Position.Z + (w - _out[0].Position.X) * (_in[0].Position.Z - _out[0].Position.Z) / (_in[0].Position.X - _out[0].Position.X)),
+						TexCoords = new(
+							_out[0].TexCoords.X + (w - _out[0].Position.X) * (_in[0].TexCoords.X - _out[0].TexCoords.X) / (_in[0].Position.X - _out[0].Position.X),
+							_out[0].TexCoords.Y + (w - _out[0].Position.X) * (_in[0].TexCoords.Y - _out[0].TexCoords.Y) / (_in[0].Position.X - _out[0].Position.X),
+							_out[0].TexCoords.Z + (w - _out[0].Position.X) * (_in[0].TexCoords.Z - _out[0].TexCoords.Z) / (_in[0].Position.X - _out[0].Position.X))
+					};
+
+					var extraPoint2 = new Vertex
+					{
+						Position = new(
+							w,
+							_out[0].Position.Y + (w - _out[0].Position.X) * (_in[1].Position.Y - _out[0].Position.Y) / (_in[1].Position.X - _out[0].Position.X),
+							_out[0].Position.Z + (w - _out[0].Position.X) * (_in[1].Position.Z - _out[0].Position.Z) / (_in[1].Position.X - _out[0].Position.X)),
+						TexCoords = new(
+							_out[0].TexCoords.X + (w - _out[0].Position.X) * (_in[1].TexCoords.X - _out[0].TexCoords.X) / (_in[1].Position.X - _out[0].Position.X),
+							_out[0].TexCoords.Y + (w - _out[0].Position.X) * (_in[1].TexCoords.Y - _out[0].TexCoords.Y) / (_in[1].Position.X - _out[0].Position.X),
+							_out[0].TexCoords.Z + (w - _out[0].Position.X) * (_in[1].TexCoords.Z - _out[0].TexCoords.Z) / (_in[1].Position.X - _out[0].Position.X))
+					};
+
+					result.Push(new(extraPoint1, _in[0], _in[1], Image, normalZ));
+					result.Push(new(extraPoint2, extraPoint1, _in[1], Image, normalZ));
+				}
+				else if (_out.Count == 2)
+				{
+					var extraPoint1 = new Vertex
+					{
+						Position = new(
+						w,
+						_out[0].Position.Y + (w - _out[0].Position.X) * (_in[0].Position.Y - _out[0].Position.Y) / (_in[0].Position.X - _out[0].Position.X),
+						_out[0].Position.Z + (w - _out[0].Position.X) * (_in[0].Position.Z - _out[0].Position.Z) / (_in[0].Position.X - _out[0].Position.X)),
+						TexCoords = new(
+						_out[0].TexCoords.X + (w - _out[0].Position.X) * (_in[0].TexCoords.X - _out[0].TexCoords.X) / (_in[0].Position.X - _out[0].Position.X),
+						_out[0].TexCoords.Y + (w - _out[0].Position.X) * (_in[0].TexCoords.Y - _out[0].TexCoords.Y) / (_in[0].Position.X - _out[0].Position.X),
+						_out[0].TexCoords.Z + (w - _out[0].Position.X) * (_in[0].TexCoords.Z - _out[0].TexCoords.Z) / (_in[0].Position.X - _out[0].Position.X))
+					};
+
+					var extraPoint2 = new Vertex
+					{
+						Position = new(
+							w,
+							_out[1].Position.Y + (w - _out[1].Position.X) * (_in[0].Position.Y - _out[1].Position.Y) / (_in[0].Position.X - _out[1].Position.X),
+							_out[1].Position.Z + (w - _out[1].Position.X) * (_in[0].Position.Z - _out[1].Position.Z) / (_in[0].Position.X - _out[1].Position.X)),
+						TexCoords = new(
+							_out[1].TexCoords.X + (w - _out[1].Position.X) * (_in[0].TexCoords.X - _out[1].TexCoords.X) / (_in[0].Position.X - _out[1].Position.X),
+							_out[1].TexCoords.Y + (w - _out[1].Position.X) * (_in[0].TexCoords.Y - _out[1].TexCoords.Y) / (_in[0].Position.X - _out[1].Position.X),
+							_out[1].TexCoords.Z + (w - _out[1].Position.X) * (_in[0].TexCoords.Z - _out[1].TexCoords.Z) / (_in[0].Position.X - _out[1].Position.X))
+					};
+
+					result.Push(new(extraPoint1, extraPoint2, _in[0], Image, normalZ));
+				}
 			}
-			#endregion
+			// top
+			for (int i = 0; i < result.Count; i++)
+			{
+				var currentTriangle = result.Pop();
+				_in.Clear();
+				_out.Clear();
+				for (int j = 0; j < 3; j++)
+				{
+					var vert = currentTriangle.vertsCamera[j];
+					if (vert.Position.Y < 0)
+						_out.Add(vert);
+					else
+						_in.Add(vert);
+				}
+				if (_out.Count == 0)
+					result.Push(new(_in[0], _in[1], _in[2], Image, normalZ));
+
+				else if (_out.Count == 1)
+				{
+					var extraPoint1 = new Vertex
+					{
+						Position = new(
+						_out[0].Position.X - _out[0].Position.Y * (_in[0].Position.X - _out[0].Position.X) / (_in[0].Position.Y - _out[0].Position.Y),
+						0,
+						_out[0].Position.Z - _out[0].Position.Y * (_in[0].Position.Z - _out[0].Position.Z) / (_in[0].Position.Y - _out[0].Position.Y)),
+						TexCoords = new(
+						_out[0].TexCoords.X - _out[0].Position.Y * (_in[0].TexCoords.X - _out[0].TexCoords.X) / (_in[0].Position.Y - _out[0].Position.Y),
+						_out[0].TexCoords.Y - _out[0].Position.Y * (_in[0].TexCoords.Y - _out[0].TexCoords.Y) / (_in[0].Position.Y - _out[0].Position.Y),
+						_out[0].TexCoords.Z - _out[0].Position.Y * (_in[0].TexCoords.Z - _out[0].TexCoords.Z) / (_in[0].Position.Y - _out[0].Position.Y))
+					};
+
+					var extraPoint2 = new Vertex
+					{
+						Position = new(
+						_out[0].Position.X - _out[0].Position.Y * (_in[1].Position.X - _out[0].Position.X) / (_in[1].Position.Y - _out[0].Position.Y),
+						0,
+						_out[0].Position.Z - _out[0].Position.Y * (_in[1].Position.Z - _out[0].Position.Z) / (_in[1].Position.Y - _out[0].Position.Y)),
+						TexCoords = new(
+						_out[0].TexCoords.X - _out[0].Position.Y * (_in[1].TexCoords.X - _out[0].TexCoords.X) / (_in[1].Position.Y - _out[0].Position.Y),
+						_out[0].TexCoords.Y - _out[0].Position.Y * (_in[1].TexCoords.Y - _out[0].TexCoords.Y) / (_in[1].Position.Y - _out[0].Position.Y),
+						_out[0].TexCoords.Z - _out[0].Position.Y * (_in[1].TexCoords.Z - _out[0].TexCoords.Z) / (_in[1].Position.Y - _out[0].Position.Y))
+					};
+
+					result.Push(new(extraPoint1, _in[0], _in[1], Image, normalZ));
+					result.Push(new(extraPoint2, extraPoint1, _in[1], Image, normalZ));
+				}
+				else if (_out.Count == 2)
+				{
+					var extraPoint1 = new Vertex
+					{
+						Position = new(
+						_out[0].Position.X - _out[0].Position.Y * (_in[0].Position.X - _out[0].Position.X) / (_in[0].Position.Y - _out[0].Position.Y),
+						0,
+						_out[0].Position.Z - _out[0].Position.Y * (_in[0].Position.Z - _out[0].Position.Z) / (_in[0].Position.Y - _out[0].Position.Y)),
+						TexCoords = new(
+						_out[0].TexCoords.X - _out[0].Position.Y * (_in[0].TexCoords.X - _out[0].TexCoords.X) / (_in[0].Position.Y - _out[0].Position.Y),
+						_out[0].TexCoords.Y - _out[0].Position.Y * (_in[0].TexCoords.Y - _out[0].TexCoords.Y) / (_in[0].Position.Y - _out[0].Position.Y),
+						_out[0].TexCoords.Z - _out[0].Position.Y * (_in[0].TexCoords.Z - _out[0].TexCoords.Z) / (_in[0].Position.Y - _out[0].Position.Y))
+					};
+
+					var extraPoint2 = new Vertex
+					{
+						Position = new(
+						_out[1].Position.X - _out[1].Position.Y * (_in[0].Position.X - _out[1].Position.X) / (_in[0].Position.Y - _out[1].Position.Y),
+						0,
+						_out[1].Position.Z - _out[1].Position.Y * (_in[0].Position.Z - _out[1].Position.Z) / (_in[0].Position.Y - _out[1].Position.Y)),
+						TexCoords = new(
+						_out[1].TexCoords.X - _out[1].Position.Y * (_in[0].TexCoords.X - _out[1].TexCoords.X) / (_in[0].Position.Y - _out[1].Position.Y),
+						_out[1].TexCoords.Y - _out[1].Position.Y * (_in[0].TexCoords.Y - _out[1].TexCoords.Y) / (_in[0].Position.Y - _out[1].Position.Y),
+						_out[1].TexCoords.Z - _out[1].Position.Y * (_in[0].TexCoords.Z - _out[1].TexCoords.Z) / (_in[0].Position.Y - _out[1].Position.Y))
+					};
+					result.Push(new(extraPoint1, extraPoint2, _in[0], Image, normalZ));
+				}
+			}
+			// bottom
+			for (int i = 0; i < result.Count; i++)
+			{
+				var currentTriangle = result.Pop();
+				_in.Clear();
+				_out.Clear();
+				for (int j = 0; j < 3; j++)
+				{
+					var vert = currentTriangle.vertsCamera[j];
+					if (vert.Position.Y >= console.Height)
+						_out.Add(vert);
+					else
+						_in.Add(vert);
+				}
+				var h = console.Height - 1;
+				if (_out.Count == 0)
+					result.Push(new(_in[0], _in[1], _in[2], Image, normalZ));
+				else if (_out.Count == 1)
+				{
+					var extraPoint1 = new Vertex
+					{
+						Position = new(
+							_out[0].Position.X + (h - _out[0].Position.Y) * (_in[0].Position.X - _out[0].Position.X) / (_in[0].Position.Y - _out[0].Position.Y),
+							h,
+							_out[0].Position.Z + (h - _out[0].Position.Y) * (_in[0].Position.Z - _out[0].Position.Z) / (_in[0].Position.Y - _out[0].Position.Y)),
+						TexCoords = new(
+							_out[0].TexCoords.X + (h - _out[0].Position.Y) * (_in[0].TexCoords.X - _out[0].TexCoords.X) / (_in[0].Position.Y - _out[0].Position.Y),
+							_out[0].TexCoords.Y + (h - _out[0].Position.Y) * (_in[0].TexCoords.Y - _out[0].TexCoords.Y) / (_in[0].Position.Y - _out[0].Position.Y),
+							_out[0].TexCoords.Z + (h - _out[0].Position.Y) * (_in[0].TexCoords.Z - _out[0].TexCoords.Z) / (_in[0].Position.Y - _out[0].Position.Y))
+					};
+
+					var extraPoint2 = new Vertex
+					{
+						Position = new(
+							_out[0].Position.X + (h - _out[0].Position.Y) * (_in[1].Position.X - _out[0].Position.X) / (_in[1].Position.Y - _out[0].Position.Y),
+							h,
+							_out[0].Position.Z + (h - _out[0].Position.Y) * (_in[1].Position.Z - _out[0].Position.Z) / (_in[1].Position.Y - _out[0].Position.Y)),
+						TexCoords = new(
+							_out[0].TexCoords.X + (h - _out[0].Position.Y) * (_in[1].TexCoords.X - _out[0].TexCoords.X) / (_in[1].Position.Y - _out[0].Position.Y),
+							_out[0].TexCoords.Y + (h - _out[0].Position.Y) * (_in[1].TexCoords.Y - _out[0].TexCoords.Y) / (_in[1].Position.Y - _out[0].Position.Y),
+							_out[0].TexCoords.Z + (h - _out[0].Position.Y) * (_in[1].TexCoords.Z - _out[0].TexCoords.Z) / (_in[1].Position.Y - _out[0].Position.Y))
+					};
+
+					result.Push(new(extraPoint1, _in[0], _in[1], Image, normalZ));
+					result.Push(new(extraPoint2, extraPoint1, _in[1], Image, normalZ));
+				}
+				else if (_out.Count == 2)
+				{
+					var extraPoint1 = new Vertex
+					{
+						Position = new(
+							_out[0].Position.X + (h - _out[0].Position.Y) * (_in[0].Position.X - _out[0].Position.X) / (_in[0].Position.Y - _out[0].Position.Y),
+							h,
+							_out[0].Position.Z + (h - _out[0].Position.Y) * (_in[0].Position.Z - _out[0].Position.Z) / (_in[0].Position.Y - _out[0].Position.Y)),
+						TexCoords = new(
+							_out[0].TexCoords.X + (h - _out[0].Position.Y) * (_in[0].TexCoords.X - _out[0].TexCoords.X) / (_in[0].Position.Y - _out[0].Position.Y),
+							_out[0].TexCoords.Y + (h - _out[0].Position.Y) * (_in[0].TexCoords.Y - _out[0].TexCoords.Y) / (_in[0].Position.Y - _out[0].Position.Y),
+							_out[0].TexCoords.Z + (h - _out[0].Position.Y) * (_in[0].TexCoords.Z - _out[0].TexCoords.Z) / (_in[0].Position.Y - _out[0].Position.Y))
+					};
+
+					var extraPoint2 = new Vertex
+					{
+						Position = new(
+							_out[1].Position.X + (h - _out[1].Position.Y) * (_in[0].Position.X - _out[1].Position.X) / (_in[0].Position.Y - _out[1].Position.Y),
+							h,
+							_out[1].Position.Z + (h - _out[1].Position.Y) * (_in[0].Position.Z - _out[1].Position.Z) / (_in[0].Position.Y - _out[1].Position.Y)),
+						TexCoords = new(
+							_out[1].TexCoords.X + (h - _out[1].Position.Y) * (_in[0].TexCoords.X - _out[1].TexCoords.X) / (_in[0].Position.Y - _out[1].Position.Y),
+							_out[1].TexCoords.Y + (h - _out[1].Position.Y) * (_in[0].TexCoords.Y - _out[1].TexCoords.Y) / (_in[0].Position.Y - _out[1].Position.Y),
+							_out[1].TexCoords.Z + (h - _out[1].Position.Y) * (_in[0].TexCoords.Z - _out[1].TexCoords.Z) / (_in[0].Position.Y - _out[1].Position.Y))
+					};
+
+					result.Push(new(extraPoint1, extraPoint2, _in[0], Image, normalZ));
+				}
+			}
 
 			return result.ToArray();
 		}

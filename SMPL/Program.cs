@@ -75,12 +75,9 @@ namespace SMPL
          console.Clear();
          cubeWindow.Clear();
 
-         Camera.Main.Area.Position = new(0, 0, -1000);
          Camera.Main.Area.Rotation += new Vector3(0, 0.01f, 0);
-
-         cube.Area.Position = new(0, 0, 0);
+         cube.Area.Position = new(0, 0, 100);
          cube.Area.Scale = new(2, 2, 2);
-         //cube.Area.Rotation += new Vector3(-0.015f, 0.012f, 0.01f);
          cube.Draw(cubeWindow, Camera.Main);
 
          DrawWindowBorder();
