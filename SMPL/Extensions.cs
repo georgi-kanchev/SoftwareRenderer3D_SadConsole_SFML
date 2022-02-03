@@ -33,6 +33,7 @@ namespace SMPL
 			var Z0 = (camResolutionX / 2f) / Tan((camFieldOfView / 2f) * PI / 180f);
 			point.X *= Z0 / (Z0 + point.Z);
 			point.Y *= Z0 / (Z0 + point.Z);
+			point.Z *= Z0 / (Z0 + point.Z);
 			return point;
 		}
 		public static Vector3 FixAffineCoordinates(this Vector3 texCoords, float pointZ, float camResolutionX, float camFieldOfView)
@@ -45,7 +46,7 @@ namespace SMPL
 		}
 		public static Vector3 CenterScreen(this Vector3 point, Vector2 size)
 		{
-			return new(point.X + size.X * 0.5f, point.Y + size.Y * 0.5f, 0);
+			return new(point.X + size.X * 0.5f, point.Y + size.Y * 0.5f, point.Z);
 		}
 	}
 }
