@@ -16,7 +16,11 @@ namespace SMPL
 			var zClippedTrigs = new List<Triangle>();
 			for (int i = 0; i < triangles.Length; i++)
 			{
+				triangles[i].lightAmount = SadRogue.Primitives.Color.White;
 				triangles[i].UpdatePoints(Area);
+				triangles[i].CalculateNormal();
+				triangles[i].ApplyLight(Light.Sun.ColorShadow, Light.Type.Ambient);
+				triangles[i].ApplyLight(Light.Sun.ColorLight, Light.Type.Directional);
 				triangles[i].AccountCamera(camera);
 
 				zClippedTrigs.AddRange(triangles[i].GetZClippedTriangles());
@@ -97,7 +101,8 @@ namespace SMPL
 					new(verts[indexVert[i + 2]], i + 2 < indexTexCoords.Count ? texCoords[indexTexCoords[i + 2]] : default),
 					image,
 					norms[indexNorm[i]],
-					0);
+					0,
+					SadRogue.Primitives.Color.White);
 				mesh.triangles[i / 3] = trig;
 			}
 			return mesh;
