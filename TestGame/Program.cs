@@ -8,7 +8,7 @@ namespace TestGame
 		static void Main() => Start(1280, 720, new Program());
 		public override void OnStart()
 		{
-			Debug.Log("Hello, World!");
+			Debug.LogError(0, "penka");
 		}
 	}
 }

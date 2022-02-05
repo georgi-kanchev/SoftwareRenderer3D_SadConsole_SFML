@@ -26,12 +26,11 @@ namespace SMPL.Profiling
 			public bool IncludeParamsTypeName { get; set; }
 		}
 
-		const int width = 40, height = 20;
+		const int width = 60, height = 10;
 
 		internal static Window logWindow;
 		internal static ListBox logList;
 		internal static Button closeButton, clearButton;
-		internal static int longestLog;
 
 		internal static List<Type> TypesSMPL;
 		internal static List<Type> TypesUser;
@@ -56,22 +55,25 @@ namespace SMPL.Profiling
 			TypesSMPL = Assembly.GetCallingAssembly().GetTypes().ToList();
 			TypesUser = Assembly.GetEntryAssembly().GetTypes().ToList();
 
-			logWindow = new(width, height) { Title = "Debug Logs" };
-			logList = new ListBox(width - 5, height - 2) { Position = new(2, 1) };
-			closeButton = new Button(3) { Text = "X", Position = new(width - 3, 0) };
-			clearButton = new Button(7) { Text = "Clear", Position = new(width - 10, 0) };
+			logWindow = new(width, height) { Title = "Debug Logs", TitleAlignment = HorizontalAlignment.Left };
+			logList = new(width - 4, height - 2) { Position = new(2, 1) };
+			closeButton = new(3) { Text = "X", Position = new(width - 3, 0) };
+			clearButton = new(7) { Text = "Clear", Position = new(width - 11, 0) };
 			closeButton.Click += CloseLogs;
 			clearButton.Click += ClearLogs;
-			logWindow.PositionChanged += OnDragged;
 			Game.Instance.FrameUpdate += OnUpdate;
+			logWindow.PositionChanged += OnDragged;
+			logList.SelectedItemExecuted += OnLogClick;
 
 			logWindow.Controls.Add(closeButton);
 			logWindow.Controls.Add(clearButton);
 			logWindow.Controls.Add(logList);
 
 			ShowWindowHotkey = Keys.Tab;
+			Log("Double-click [LMB] on a log to remove it.");
 		}
 
+		private static void OnLogClick(object sender, ListBox.SelectedItemEventArgs e) => logList.Items.Remove(e.Item);
 		private static void OnDragged(object sender, ValueChangedEventArgs<Point> e) => logWindow.KeepInConsole(Simple.Console);
 		private static void CloseLogs(object sender, EventArgs e) => logWindow.Hide();
 		private static void ClearLogs(object sender, EventArgs e) => logList.Items.Clear();
@@ -193,18 +195,34 @@ namespace SMPL.Profiling
 				return;
 
 			var str = message.ToString();
+			var newLine = "";
+			if (str.Length >= width - 4)
+			{
+				var noWordNewLine = true;
+				for (int i = width - 4; i >= 0; i--)
+					if (str[i] == ' ')
+					{
+						newLine = str[(i + 1)..];
+						str = str.Substring(0, i);
+						noWordNewLine = false;
+						break;
+					}
+				if (noWordNewLine)
+				{
+					newLine = str[(width - 1)..];
+					str = str.Substring(0, width - 1);
+				}
+			}
+
 			logWindow.Show();
 			logList.Items.Add(str);
 			logList.SelectedIndex = logList.Items.Count - 1;
 			logList.Update(TimeSpan.Zero);
 			logList.ScrollToSelectedItem();
+			logList.SelectedIndex = -1;
 
-			if (longestLog < str.Length)
-			{
-				longestLog = str.Length;
-				logList.Resize(longestLog + 3, 10);
-				logWindow.Resize(longestLog + 3, logWindow.Height, false);
-			}
+			if (newLine != "")
+				Log(newLine);
 		}
 		public static void LogError(int depth, string description)
 		{
@@ -219,10 +237,9 @@ namespace SMPL.Profiling
 				for (int i = 0; i < 100; i++)
 					Add(depth + i + 1);
 
-			var acts = "";
+			Log($"[!] Error at");
 			for (int i = methods.Count - 1; i >= 0; i--)
-				acts += $" > {actions[i]}";
-			Log($"[!] Error{acts}");
+				Log($"[!] - {actions[i]}");
 			Log($"[!] {description}");
 
 			void Add(int depth)
@@ -240,11 +257,7 @@ namespace SMPL.Profiling
 				actions.Add($"{action}()");
 			}
 		}
-		public static void Clear()
-		{
-			longestLog = 0;
-			logWindow.Clear();
-		}
+		public static void Clear() => logWindow.Clear();
 
 		private static bool IsCalledByUser(int depth)
 		{
@@ -259,6 +272,5 @@ namespace SMPL.Profiling
 				(parentMethod.DeclaringType == typeof(Event) && parentMethod.Name == "Trigger") ||
 				TypesUser.Contains(parentMethod.DeclaringType);
 		}
-
 	}
 }

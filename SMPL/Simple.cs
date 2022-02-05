@@ -2,6 +2,8 @@
 using Console = SadConsole.Console;
 using SFML.Graphics;
 using System.Numerics;
+using SMPL.Profiling;
+
 namespace SMPL
 {
    public abstract class Simple
