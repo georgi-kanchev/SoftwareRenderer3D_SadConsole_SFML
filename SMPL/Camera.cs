@@ -2,14 +2,7 @@
 {
 	public class Camera
 	{
-		public static Camera Main { get; }
-
+		public static Camera Main { get; } = new();
 		public Area Area { get; } = new();
-
-		static Camera()
-		{
-			Main = new();
-			Main.Area.Position = new(0, 0, -10);
-		}
 	}
 }

@@ -82,3 +82,6 @@ D:\code\SadConsole\SMPL\obj\Debug\net5.0\SMPL.dll
 D:\code\SadConsole\SMPL\obj\Debug\net5.0\ref\SMPL.dll
 D:\code\SadConsole\SMPL\obj\Debug\net5.0\SMPL.pdb
 D:\code\SadConsole\SMPL\obj\Debug\net5.0\SMPL.genruntimeconfig.cache
+D:\code\SadConsole\SMPL\bin\Debug\net5.0\NetCoreServer.dll
+D:\code\SadConsole\SMPL\obj\Debug\net5.0\Interop.NetFwTypeLib.dll
+D:\code\SadConsole\SMPL\obj\Debug\net5.0\SMPL.csproj.ResolveComReference.cache

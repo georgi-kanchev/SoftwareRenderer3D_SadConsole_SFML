@@ -88,3 +88,4 @@ D:\code\SadConsole\TestGame\obj\Debug\net5.0\TestGame.dll
 D:\code\SadConsole\TestGame\obj\Debug\net5.0\ref\TestGame.dll
 D:\code\SadConsole\TestGame\obj\Debug\net5.0\TestGame.pdb
 D:\code\SadConsole\TestGame\obj\Debug\net5.0\TestGame.genruntimeconfig.cache
+D:\code\SadConsole\TestGame\bin\Debug\net5.0\NetCoreServer.dll

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using SadConsole.UI;
+using SadConsole.UI.Controls;
 using SMPL.Profiling;
 using System;
 using System.Collections.Generic;
@@ -539,6 +540,63 @@ namespace SMPL
 		public static int Map(this int number, int lowerA, int upperA, int lowerB, int upperB) =>
 			(int)Map((float)number, lowerA, upperA, lowerB, upperB);
 
+		public static bool IsNaN(this Vector3 vec)
+		{
+			return float.IsNaN(vec.X) || float.IsNaN(vec.Y) || float.IsNaN(vec.Z);
+		}
+		public static Vector3 NaN(this Vector3 vec)
+		{
+			return new Vector3(float.NaN, float.NaN, float.NaN);
+		}
+		public static float IndexToAxis(this Vector3 vec, int i)
+		{
+			i = i.Limit(0, 2);
+			if (i == 0)
+				return vec.X;
+			else if (i == 1)
+				return vec.Y;
+			else if (i == 2)
+				return vec.Z;
+
+			return float.NaN;
+		}
+
+		public static void TryAddStringNewLine(this ListBox listBox, object item, bool scrollToAdded)
+		{
+			var str = item.ToString();
+			var newLine = "";
+			if (str.Length >= listBox.Width - 1)
+			{
+				var noWordNewLine = true;
+				for (int i = listBox.Width - 1; i >= 0; i--)
+					if (str[i] == ' ')
+					{
+						newLine = str[(i + 1)..];
+						str = str.Substring(0, i);
+						noWordNewLine = false;
+						break;
+					}
+				if (noWordNewLine)
+				{
+					newLine = str[(listBox.Width - 2)..];
+					str = str.Substring(0, listBox.Width - 2);
+				}
+			}
+
+			listBox.Items.Add(str);
+
+			if (scrollToAdded)
+			{
+				var prev = listBox.SelectedIndex;
+				listBox.SelectedIndex = listBox.Items.Count - 1;
+				listBox.Update(TimeSpan.Zero);
+				listBox.ScrollToSelectedItem();
+				listBox.SelectedIndex = prev;
+			}
+
+			if (newLine != "")
+				TryAddStringNewLine(listBox, newLine, scrollToAdded);
+		}
 		public static void KeepInConsole(this Window window, SadConsole.Console console)
 		{
 			if (window.Position.X < 0)

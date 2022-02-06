@@ -1,5 +1,7 @@
 ﻿using SMPL;
 using SMPL.Profiling;
+using SadConsole.Input;
+using SadConsole;
 
 namespace TestGame
 {
@@ -8,7 +10,7 @@ namespace TestGame
 		static void Main() => Start(1280, 720, new Program());
 		public override void OnStart()
 		{
-			Debug.LogError(0, "penka");
+			Multiplayer.StartServer();
 		}
 	}
 }

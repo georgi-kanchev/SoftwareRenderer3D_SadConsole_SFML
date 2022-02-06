@@ -55,10 +55,10 @@ namespace SMPL.Profiling
 			TypesSMPL = Assembly.GetCallingAssembly().GetTypes().ToList();
 			TypesUser = Assembly.GetEntryAssembly().GetTypes().ToList();
 
-			logWindow = new(width, height) { Title = "Debug Logs", TitleAlignment = HorizontalAlignment.Left };
+			logWindow = new(width, height) { Title = " Debug Logs ", TitleAlignment = HorizontalAlignment.Left };
 			logList = new(width - 4, height - 2) { Position = new(2, 1) };
-			closeButton = new(3) { Text = "X", Position = new(width - 3, 0) };
-			clearButton = new(7) { Text = "Clear", Position = new(width - 11, 0) };
+			closeButton = new(3) { Text = "X", Position = new(width - 4, 0) };
+			clearButton = new(7) { Text = "Clear", Position = new(width - 12, 0) };
 			closeButton.Click += CloseLogs;
 			clearButton.Click += ClearLogs;
 			Game.Instance.FrameUpdate += OnUpdate;
@@ -194,35 +194,8 @@ namespace SMPL.Profiling
 			if (IsActive == false)
 				return;
 
-			var str = message.ToString();
-			var newLine = "";
-			if (str.Length >= width - 4)
-			{
-				var noWordNewLine = true;
-				for (int i = width - 4; i >= 0; i--)
-					if (str[i] == ' ')
-					{
-						newLine = str[(i + 1)..];
-						str = str.Substring(0, i);
-						noWordNewLine = false;
-						break;
-					}
-				if (noWordNewLine)
-				{
-					newLine = str[(width - 1)..];
-					str = str.Substring(0, width - 1);
-				}
-			}
-
 			logWindow.Show();
-			logList.Items.Add(str);
-			logList.SelectedIndex = logList.Items.Count - 1;
-			logList.Update(TimeSpan.Zero);
-			logList.ScrollToSelectedItem();
-			logList.SelectedIndex = -1;
-
-			if (newLine != "")
-				Log(newLine);
+			logList.TryAddStringNewLine(message, true);
 		}
 		public static void LogError(int depth, string description)
 		{
