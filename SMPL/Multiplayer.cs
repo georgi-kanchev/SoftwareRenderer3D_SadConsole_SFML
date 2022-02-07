@@ -7,17 +7,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using TcpClient = NetCoreServer.TcpClient;
-using SMPL.Profiling;
-using SadConsole.UI;
-using SadConsole.UI.Controls;
 
 namespace SMPL
 {
 	public static class Multiplayer
 	{
-		const int width = 80, height = 20;
-		internal static Window window;
-		internal static ListBox log;
+		internal static WindowPlus window;
 
 		public enum ChoiceAction { ServerStart, ServerStop, ClientConnect, ClientDisconnect, ClientTakenUID }
 		public struct Message
@@ -180,10 +175,7 @@ namespace SMPL
 
 		static Multiplayer()
 		{
-			window = new(width, height) { Title = " Multiplayer " };
-			log = new(width - 4, height - 2) { Position = new(2, 1) };
-			window.Show();
-			window.Controls.Add(log);
+			window = new(80, 20, SadConsole.Input.Keys.Home) { Title = " Multiplayer " };
 		}
 
 		public static void StartServer()
@@ -548,7 +540,7 @@ namespace SMPL
 		}
 		private static void Log(string message)
 		{
-			log.TryAddStringNewLine(message, true);
+			window.List.TryAddStringNewLine(message, true);
 		}
 	}
 }

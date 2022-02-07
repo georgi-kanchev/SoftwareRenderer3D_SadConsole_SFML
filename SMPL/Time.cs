@@ -1,7 +1,7 @@
 ﻿using SFML.System;
 using System;
 
-namespace SMPL.Profiling
+namespace SMPL
 {
 	public static class Time
 	{

@@ -1,15 +1,12 @@
 ﻿using SadConsole;
-using SadConsole.UI;
-using SadConsole.UI.Controls;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using SadConsole.Input;
-using SadRogue.Primitives;
 
-namespace SMPL.Profiling
+namespace SMPL
 {
 	public static class Debug
 	{
@@ -26,11 +23,7 @@ namespace SMPL.Profiling
 			public bool IncludeParamsTypeName { get; set; }
 		}
 
-		const int width = 60, height = 10;
-
-		internal static Window logWindow;
-		internal static ListBox logList;
-		internal static Button closeButton, clearButton;
+		internal static WindowPlus logWindow;
 
 		internal static List<Type> TypesSMPL;
 		internal static List<Type> TypesUser;
@@ -39,48 +32,13 @@ namespace SMPL.Profiling
 		/// Wether the game is started from Visual Studio or its '.exe' file.
 		/// </summary>
 		public static bool IsActive { get { return Debugger.IsAttached; } }
-		private static Keys hotkey;
-		public static Keys ShowWindowHotkey
-		{
-			get => hotkey;
-			set
-			{
-				hotkey = value;
-				Log($"Press [{hotkey}] to hide or show the Debug Logs.");
-			}
-		}
 
 		static Debug()
 		{
 			TypesSMPL = Assembly.GetCallingAssembly().GetTypes().ToList();
 			TypesUser = Assembly.GetEntryAssembly().GetTypes().ToList();
 
-			logWindow = new(width, height) { Title = " Debug Logs ", TitleAlignment = HorizontalAlignment.Left };
-			logList = new(width - 4, height - 2) { Position = new(2, 1) };
-			closeButton = new(3) { Text = "X", Position = new(width - 4, 0) };
-			clearButton = new(7) { Text = "Clear", Position = new(width - 12, 0) };
-			closeButton.Click += CloseLogs;
-			clearButton.Click += ClearLogs;
-			Game.Instance.FrameUpdate += OnUpdate;
-			logWindow.PositionChanged += OnDragged;
-			logList.SelectedItemExecuted += OnLogClick;
-
-			logWindow.Controls.Add(closeButton);
-			logWindow.Controls.Add(clearButton);
-			logWindow.Controls.Add(logList);
-
-			ShowWindowHotkey = Keys.Tab;
-			Log("Double-click [LMB] on a log to remove it.");
-		}
-
-		private static void OnLogClick(object sender, ListBox.SelectedItemEventArgs e) => logList.Items.Remove(e.Item);
-		private static void OnDragged(object sender, ValueChangedEventArgs<Point> e) => logWindow.KeepInConsole(Simple.Console);
-		private static void CloseLogs(object sender, EventArgs e) => logWindow.Hide();
-		private static void ClearLogs(object sender, EventArgs e) => logList.Items.Clear();
-		private static void OnUpdate(object sender, GameHost e)
-		{
-			if (Game.Instance.Keyboard.IsKeyPressed(ShowWindowHotkey))
-				logWindow.IsVisible = logWindow.IsVisible == false;
+			logWindow = new(60, 10, Keys.End) { Title = " Debug Logs " };
 		}
 
 		public static uint CurrentLineNumber(int depth = 0)
@@ -195,7 +153,7 @@ namespace SMPL.Profiling
 				return;
 
 			logWindow.Show();
-			logList.TryAddStringNewLine(message, true);
+			logWindow.List.TryAddStringNewLine(message, true);
 		}
 		public static void LogError(int depth, string description)
 		{

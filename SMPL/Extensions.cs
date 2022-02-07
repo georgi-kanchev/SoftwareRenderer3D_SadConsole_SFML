@@ -2,7 +2,6 @@
 using Newtonsoft.Json.Serialization;
 using SadConsole.UI;
 using SadConsole.UI.Controls;
-using SMPL.Profiling;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -599,6 +598,17 @@ namespace SMPL
 		}
 		public static void KeepInConsole(this Window window, SadConsole.Console console)
 		{
+			if (console.Width - window.Width < 0)
+			{
+				window.Position = new(0, window.Position.Y);
+				return;
+			}
+			if (console.Height - window.Height < 0)
+			{
+				window.Position = new(window.Position.X, 0);
+				return;
+			}
+
 			if (window.Position.X < 0)
 				window.Position = new(0, window.Position.Y);
 			else if (window.Position.X + window.Width > console.Width)

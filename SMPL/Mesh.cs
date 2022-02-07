@@ -11,8 +11,11 @@ namespace SMPL
 		public Area Area { get; } = new();
 		internal Triangle[] triangles;
 
-		public void Draw(Console console, Camera camera, bool showBackSide = false)
+		public void Draw(Console console = null, Camera camera = null, bool showBackSide = false)
 		{
+			console ??= Simple.Console;
+			camera ??= Camera.Main;
+
 			var zClippedTrigs = new List<Triangle>();
 			for (int i = 0; i < triangles.Length; i++)
 			{
@@ -28,7 +31,7 @@ namespace SMPL
 
 			for (int i = 0; i < zClippedTrigs.Count; i++)
 			{
-				zClippedTrigs[i].ApplyPerspective(console);
+				zClippedTrigs[i].ApplyPerspective(console, camera);
 				zClippedTrigs[i].CalculateNormalZ();
 				zClippedTrigs[i].FixAffineCoordinates();
 

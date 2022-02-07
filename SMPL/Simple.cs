@@ -2,7 +2,6 @@
 using Console = SadConsole.Console;
 using SFML.Graphics;
 using System.Numerics;
-using SMPL.Profiling;
 
 namespace SMPL
 {
@@ -28,6 +27,7 @@ namespace SMPL
          RenderWindowSFML.Resized += OnWindowResize;
 
          Settings.ResizeMode = Settings.WindowResizeOptions.None;
+         Triangle.RecreateDepthBuffer();
          UpdateConsoleSize();
 
          Game.Instance.Run();
@@ -38,8 +38,18 @@ namespace SMPL
       public virtual void OnUpdate() { }
       public virtual void OnStop() { }
 
-      private static void OnWindowResize(object sender, SFML.Window.SizeEventArgs e) => UpdateConsoleSize();
-		private static void Update(object sender, GameHost e) => userGame.OnUpdate();
+      private static void OnWindowResize(object sender, SFML.Window.SizeEventArgs e)
+      {
+         Triangle.RecreateDepthBuffer();
+         UpdateConsoleSize();
+      }
+      private static void Update(object sender, GameHost e)
+      {
+         Console.Clear();
+         Time.Update();
+         Triangle.ClearDepthBuffer();
+         userGame.OnUpdate();
+      }
 
       private static void UpdateConsoleSize()
       {

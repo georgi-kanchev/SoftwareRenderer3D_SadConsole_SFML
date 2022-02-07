@@ -22,8 +22,7 @@ namespace SMPL
 	}
 	internal class Triangle
 	{
-		public static Image defaultImage = new(new SFML.Graphics.Color[,] { { SFML.Graphics.Color.White } });
-		public static float[,] zBuffer;
+		internal static float[,] zBuffer;
 
 		public readonly Vertex[] vertsLocal;
 		public readonly Vertex[] vertsGlobal = new Vertex[3];
@@ -49,7 +48,7 @@ namespace SMPL
 		{
 			for (int i = 0; i < 3; i++)
 			{
-				vertsGlobal[i].Position = vertsLocal[i].Position * area.Scale;
+				vertsGlobal[i].Position = vertsLocal[i].Position * new Vector3(area.Scale.X, -area.Scale.Y * 0.5f, area.Scale.Z);
 				vertsGlobal[i].Position = vertsGlobal[i].Position.Rotate(area.Rotation);
 				vertsGlobal[i].Position = vertsGlobal[i].Position.Translate(area.Position);
 			}
@@ -80,11 +79,11 @@ namespace SMPL
 				vertsCamera[i].Position = vertsCamera[i].Position.Rotate(-camera.Area.Rotation);
 			}
 		}
-		public void ApplyPerspective(Console console)
+		public void ApplyPerspective(Console console, Camera camera)
 		{
 			for (int i = 0; i < 3; i++)
 			{
-				vertsCamera[i].Position = vertsCamera[i].Position.ApplyPerspective(80, 45);
+				vertsCamera[i].Position = vertsCamera[i].Position.ApplyPerspective(console.Width, camera.FieldOfView);
 				vertsCamera[i].Position = vertsCamera[i].Position.CenterScreen(new(console.Width, console.Height));
 			}
 		}
@@ -150,9 +149,6 @@ namespace SMPL
 
 		public void Draw(Console console, Image image, bool cull)
 		{
-			if (zBuffer == null)
-				zBuffer = new float[console.Width, console.Height];
-
 			if (cull && normalZ < 0)
 				return;
 
@@ -184,8 +180,8 @@ namespace SMPL
 			var p2x = (int)vertsCamera[2].Position.X;
 			var p2y = (int)vertsCamera[2].Position.Y;
 
-			var texWidth = (int)image.Size.X;
-			var texHeight = (int)image.Size.Y;
+			var texWidth = image == null ? 1 : image.Size.X;
+			var texHeight = image == null ? 1 : image.Size.Y;
 
 			if (p0y < p1y)
 			{
@@ -245,7 +241,7 @@ namespace SMPL
 
 							var tu = Math.Clamp(u / w, 0, texWidth - 1);
 							var tv = Math.Clamp(v / w, 0, texHeight - 1);
-							var c = image.GetPixel((uint)tu, (uint)tv);
+							var c = image == null ? SFML.Graphics.Color.White : image.GetPixel((uint)tu, (uint)tv);
 							var zBuf = zBuffer[x, y];
 							if (zBuf == 0 || zBuf > z)
 							{
@@ -321,7 +317,7 @@ namespace SMPL
 
 							var tu = Math.Clamp(u / w, 0, texWidth - 1);
 							var tv = Math.Clamp(v / w, 0, texHeight - 1);
-							var c = image.GetPixel((uint)tu, (uint)tv);
+							var c = image == null ? SFML.Graphics.Color.White : image.GetPixel((uint)tu, (uint)tv);
 							var zBuf = zBuffer[x, y];
 							if (zBuf == 0 || zBuf > z)
 							{
@@ -757,6 +753,17 @@ namespace SMPL
 			}
 
 			return result.ToArray();
+		}
+
+		internal static void ClearDepthBuffer()
+		{
+			if (zBuffer == null)
+				return;
+			Array.Clear(zBuffer, 0, zBuffer.Length);
+		}
+		internal static void RecreateDepthBuffer()
+		{
+			zBuffer = new float[Simple.Console.Width * 2, Simple.Console.Height * 2];
 		}
 	}
 }

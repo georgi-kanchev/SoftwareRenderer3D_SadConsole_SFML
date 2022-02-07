@@ -4,7 +4,7 @@ using SFML.Graphics;
 using Color = SFML.Graphics.Color;
 using System.Numerics;
 
-namespace SMPL.Parts
+namespace SMPL
 {
 	public class Hitbox
 	{
