@@ -11,7 +11,7 @@ namespace SMPL
 		public Area Area { get; } = new();
 		internal Triangle[] triangles;
 
-		public void Draw(Console console = null, Camera camera = null, bool showBackSide = false)
+		public void Draw(Console console = null, Camera camera = null, bool showBackSide = false, List<Effect> effects = null)
 		{
 			console ??= Simple.Console;
 			camera ??= Camera.Main;
@@ -37,7 +37,7 @@ namespace SMPL
 
 				var clippedTrigs = zClippedTrigs[i].GetClippedTriangles(console);
 				for (int j = 0; j < clippedTrigs.Length; j++)
-					clippedTrigs[j].Draw(console, clippedTrigs[j].Image, showBackSide == false);
+					clippedTrigs[j].Draw(console, clippedTrigs[j].Image, showBackSide == false, effects);
 			}
 		}
 		public static Mesh Load(string filePath, Image image)

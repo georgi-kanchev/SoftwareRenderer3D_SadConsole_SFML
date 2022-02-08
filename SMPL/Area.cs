@@ -5,9 +5,6 @@ namespace SMPL
 {
 	public class Area
 	{
-		// radians = degrees * (pi / 180);
-		// degrees = radians * (180 / pi);
-
 		private Vector3 dir, right = Vector3.UnitX, up = Vector3.UnitY, front = Vector3.UnitZ;
 
 		public Vector3 Right => right;

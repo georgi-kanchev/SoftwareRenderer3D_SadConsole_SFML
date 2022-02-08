@@ -48,9 +48,10 @@ namespace SMPL
 		{
 			for (int i = 0; i < 3; i++)
 			{
+				var p = area.Position;
 				vertsGlobal[i].Position = vertsLocal[i].Position * new Vector3(area.Scale.X, -area.Scale.Y * 0.5f, area.Scale.Z);
 				vertsGlobal[i].Position = vertsGlobal[i].Position.Rotate(area.Rotation);
-				vertsGlobal[i].Position = vertsGlobal[i].Position.Translate(area.Position);
+				vertsGlobal[i].Position = vertsGlobal[i].Position.Translate(new Vector3(p.X, -p.Y, p.Z));
 			}
 		}
 		public void CalculateNormal()
@@ -75,7 +76,8 @@ namespace SMPL
 		{
 			for (int i = 0; i < 3; i++)
 			{
-				vertsCamera[i].Position = vertsGlobal[i].Position.Translate(-camera.Area.Position);
+				var p = -camera.Area.Position;
+				vertsCamera[i].Position = vertsGlobal[i].Position.Translate(new(p.X, -p.Y, p.Z));
 				vertsCamera[i].Position = vertsCamera[i].Position.Rotate(-camera.Area.Rotation);
 			}
 		}
@@ -147,7 +149,7 @@ namespace SMPL
 				(lightAmount.A + lightToAdd.A * percentToApply * color.A / 255f) / 255f);
 		}
 
-		public void Draw(Console console, Image image, bool cull)
+		public void Draw(Console console, Image image, bool cull, List<Effect> effects = null)
 		{
 			if (cull && normalZ < 0)
 				return;
@@ -232,28 +234,10 @@ namespace SMPL
 						var zstep = (ze - zs) / (x2 - x1);
 						for (int x = x1; x <= x2; x++)
 						{
-							if (x < 0 || x >= console.Width || y < 0 || y >= console.Height)
+							if (x < 0 || x >= console.Width || y < 0 || y >= console.Height || x > zBuffer.GetLength(0) - 1 || y > zBuffer.GetLength(1) - 1)
 								continue;
-							u += ustep;
-							v += vstep;
-							w += wstep;
-							z += zstep;
 
-							var tu = Math.Clamp(u / w, 0, texWidth - 1);
-							var tv = Math.Clamp(v / w, 0, texHeight - 1);
-							var c = image == null ? SFML.Graphics.Color.White : image.GetPixel((uint)tu, (uint)tv);
-							var zBuf = zBuffer[x, y];
-							if (zBuf == 0 || zBuf > z)
-							{
-								var color = new Color(
-									(float)c.R * light.R / 255f / 255f,
-									(float)c.G * light.G / 255f / 255f,
-									(float)c.B * light.B / 255f / 255f,
-									(float)c.A * light.A / 255f / 255f);
-
-								console.DrawLine(new Point(x, y), new Point(x, y), null, background: color);
-								zBuffer[x, y] = z;
-							}
+							Draw(x, y, u, v, w, z, ustep, vstep, wstep, zstep, x1, x2, p1y, p1y + (p2y - p1y), effects);
 						}
 					}
 				}
@@ -308,28 +292,64 @@ namespace SMPL
 						var zstep = (ze - zs) / (x2 - x1);
 						for (int x = x1; x <= x2; x++)
 						{
-							if (x < 0 || x >= console.Width || y < 0 || y >= console.Height)
+							if (x < 0 || x >= console.Width || y < 0 || y >= console.Height || x > zBuffer.GetLength(0) - 1 || y > zBuffer.GetLength(1) - 1)
 								continue;
-							u += ustep;
-							v += vstep;
-							w += wstep;
-							z += zstep;
 
-							var tu = Math.Clamp(u / w, 0, texWidth - 1);
-							var tv = Math.Clamp(v / w, 0, texHeight - 1);
-							var c = image == null ? SFML.Graphics.Color.White : image.GetPixel((uint)tu, (uint)tv);
-							var zBuf = zBuffer[x, y];
-							if (zBuf == 0 || zBuf > z)
-							{
-								var color = new Color(
-									(float)c.R * light.R / 255f / 255f,
-									(float)c.G * light.G / 255f / 255f,
-									(float)c.B * light.B / 255f / 255f,
-									(float)c.A * light.A / 255f / 255f);
+							Draw(x, y, u, v, w, z, ustep, vstep, wstep, zstep, x1, x2, p1y, p1y + (p2y - p1y), effects);
+						}
+					}
+				}
+			}
 
-								console.DrawLine(new Point(x, y), new Point(x, y), null, background: color);
-								zBuffer[x, y] = z;
-							}
+			void Draw(int x, int y, float u, float v, float w, float z,
+				float ustep, float vstep, float wstep, float zstep, float x1, float x2, float y1, float y2, List<Effect> effects)
+			{
+				u += ustep;
+				v += vstep;
+				w += wstep;
+				z += zstep;
+
+				var tu = Math.Clamp(u / w, 0, texWidth - 1);
+				var tv = Math.Clamp(v / w, 0, texHeight - 1);
+				var c = image == null ? SFML.Graphics.Color.White : image.GetPixel((uint)tu, (uint)tv);
+				var zBuf = zBuffer[x, y];
+				if (zBuf == 0 || zBuf > z)
+				{
+					var color = new Color(
+						(float)c.R * light.R / 255f / 255f,
+						(float)c.G * light.G / 255f / 255f,
+						(float)c.B * light.B / 255f / 255f,
+						(float)c.A * light.A / 255f / 255f);
+
+					if (effects == null || effects.Count == 0)
+					{
+						console.DrawLine(new(x, y), new(x, y), null, background: color);
+						zBuffer[x, y] = z;
+					}
+					else
+					{
+						var result = new Effect.Data()
+						{
+							BackgroundColorPrevious = console.GetBackground(x, y),
+							BackgroundColorResult = color,
+							CurrentPosition = new(x, y),
+							CurrentTexturePosition = new(tu, tv),
+							DepthPrevious = zBuffer[x, y],
+							DepthResult = z,
+							GlyphColorPrevious = console.GetForeground(x, y),
+							GlyphColorResult = Color.White,
+							GlyphPrevious = console.GetGlyph(x, y),
+							GlyphResult = 0,
+							LineScreenStart = new(x1, y1),
+							LineScreenEnd = new(x2, y2),
+						};
+						for (int i = 0; i < effects.Count; i++)
+						{
+							result = effects[i].PerGlyph(result);
+							var p = new Point((int)result.CurrentPosition.X, (int)result.CurrentPosition.Y);
+							console.DrawLine(p, p, result.GlyphResult, result.GlyphColorResult, result.BackgroundColorResult);
+							if (p.X > 0 && p.X < zBuffer.GetLength(0) && p.Y > 0 && p.Y < zBuffer.GetLength(1))
+								zBuffer[p.X, p.Y] = result.DepthResult;
 						}
 					}
 				}
@@ -763,7 +783,7 @@ namespace SMPL
 		}
 		internal static void RecreateDepthBuffer()
 		{
-			zBuffer = new float[Simple.Console.Width * 2, Simple.Console.Height * 2];
+			zBuffer = new float[Simple.Console.Width, Simple.Console.Height];
 		}
 	}
 }

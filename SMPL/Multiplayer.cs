@@ -1,5 +1,6 @@
 ﻿using NetCoreServer;
 using NetFwTypeLib;
+using SadConsole;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -7,6 +8,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using TcpClient = NetCoreServer.TcpClient;
+using SadRogue.Primitives;
 
 namespace SMPL
 {
@@ -175,7 +177,8 @@ namespace SMPL
 
 		static Multiplayer()
 		{
-			window = new(80, 20, SadConsole.Input.Keys.Home) { Title = " Multiplayer " };
+			window = new(80, 20, SadConsole.Input.Keys.Home) { Title = $" Multiplayer (clients online: {clientIDs.Count}) " };
+			Game.Instance.FrameUpdate += OnUpdate;
 		}
 
 		public static void StartServer()
@@ -303,6 +306,13 @@ namespace SMPL
 			else server.Multicast(msgStr);
 		}
 
+		private static void OnUpdate(object sender, GameHost e)
+		{
+			if (Time.FrameCount % 100 != 0)
+				return;
+
+			window.Title = $" Multiplayer (clients online: {clientIDs.Count}) ";
+		}
 		private static string MessageToString(Message message)
 		{
 			return
