@@ -49,7 +49,7 @@ namespace SMPL
 			for (int i = 0; i < 3; i++)
 			{
 				var p = area.Position;
-				vertsGlobal[i].Position = vertsLocal[i].Position * new Vector3(area.Scale.X, -area.Scale.Y * 0.5f, area.Scale.Z);
+				vertsGlobal[i].Position = vertsLocal[i].Position * new Vector3(area.Scale.X, -area.Scale.Y, area.Scale.Z);
 				vertsGlobal[i].Position = vertsGlobal[i].Position.Rotate(area.Rotation);
 				vertsGlobal[i].Position = vertsGlobal[i].Position.Translate(new Vector3(p.X, -p.Y, p.Z));
 			}
@@ -237,7 +237,12 @@ namespace SMPL
 							if (x < 0 || x >= console.Width || y < 0 || y >= console.Height || x > zBuffer.GetLength(0) - 1 || y > zBuffer.GetLength(1) - 1)
 								continue;
 
-							Draw(x, y, u, v, w, z, ustep, vstep, wstep, zstep, x1, x2, p1y, p1y + (p2y - p1y), effects);
+							u += ustep;
+							v += vstep;
+							w += wstep;
+							z += zstep;
+
+							Draw(x, y, u, v, w, z, x1, x2, p1y, p1y + (p2y - p1y), effects);
 						}
 					}
 				}
@@ -295,20 +300,19 @@ namespace SMPL
 							if (x < 0 || x >= console.Width || y < 0 || y >= console.Height || x > zBuffer.GetLength(0) - 1 || y > zBuffer.GetLength(1) - 1)
 								continue;
 
-							Draw(x, y, u, v, w, z, ustep, vstep, wstep, zstep, x1, x2, p1y, p1y + (p2y - p1y), effects);
+							u += ustep;
+							v += vstep;
+							w += wstep;
+							z += zstep;
+
+							Draw(x, y, u, v, w, z, x1, x2, p1y, p1y + (p2y - p1y), effects);
 						}
 					}
 				}
 			}
 
-			void Draw(int x, int y, float u, float v, float w, float z,
-				float ustep, float vstep, float wstep, float zstep, float x1, float x2, float y1, float y2, List<Effect> effects)
+			void Draw(int x, int y, float u, float v, float w, float z, float x1, float x2, float y1, float y2, List<Effect> effects)
 			{
-				u += ustep;
-				v += vstep;
-				w += wstep;
-				z += zstep;
-
 				var tu = Math.Clamp(u / w, 0, texWidth - 1);
 				var tv = Math.Clamp(v / w, 0, texHeight - 1);
 				var c = image == null ? SFML.Graphics.Color.White : image.GetPixel((uint)tu, (uint)tv);

@@ -8,7 +8,7 @@ namespace SMPL
 		internal enum Type { Ambient, Directional, Point }
 		public static class Sun
 		{
-			public static Vector3 Direction { get; set; } = new(1, -1, -1);
+			public static Vector3 Direction { get; set; } = Vector3.Normalize(new(1, -1, -1));
 			public static Color ColorLight { get; set; } = Color.White;
 			public static Color ColorShadow { get; set; } = new(50, 50, 50, 255);
 		}
