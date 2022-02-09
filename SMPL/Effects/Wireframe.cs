@@ -9,7 +9,7 @@ namespace SMPL.Effects
 		public override Data PerGlyph(Data input)
 		{
 			var x = input.CurrentPosition.X;
-			input.BackgroundColorResult = x == input.LineScreenStart.X || x == input.LineScreenEnd.X ? Color : Color.Transparent;
+			input.BackgroundColor = x == input.LineScreenStart.X || x == input.LineScreenEnd.X ? Color : Color.Transparent;
 			return input;
 		}
 	}

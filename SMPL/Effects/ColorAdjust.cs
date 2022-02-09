@@ -14,7 +14,7 @@ namespace SMPL.Effects
 
 		public override Data PerGlyph(Data input)
 		{
-			var color = input.BackgroundColorResult;
+			var color = input.BackgroundColor;
 			var c = new Vector3(color.R / 255f, color.G / 255f, color.B / 255f);
 			var gamma = 1f / (1f - Gamma);
 			c = new(MathF.Pow(c.X, gamma), MathF.Pow(c.Y, gamma), MathF.Pow(c.Z, gamma));
@@ -26,7 +26,7 @@ namespace SMPL.Effects
 			c = (c - half) * ((Contrast + 1f) / (1f - Contrast)) + half;
 			c += new Vector3(Brightness, Brightness, Brightness);
 
-			input.BackgroundColorResult = new(c.X, c.Y, c.Z);
+			input.BackgroundColor = new(c.X, c.Y, c.Z);
 			return input;
 		}
 	}

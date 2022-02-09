@@ -9,23 +9,20 @@ namespace SMPL
 	{
 		public class Data
 		{
+			public Image Image { get; set; }
+			public bool IsVisible { get; set; } = true;
+
 			public Vector2 LineScreenStart { get; set; }
 			public Vector2 LineScreenEnd { get; set; }
 
 			public Vector2 CurrentPosition { get; set; }
 			public Vector2 CurrentTexturePosition { get; set; }
+			public int CurrentGlyphCount { get; set; }
 
-			public float DepthPrevious { get; set; }
-			public float DepthResult { get; set; }
-
-			public Color BackgroundColorPrevious { get; set; }
-			public Color BackgroundColorResult { get; set; }
-
-			public int GlyphPrevious { get; set; }
-			public int GlyphResult { get; set; }
-
-			public Color GlyphColorPrevious { get; set; }
-			public Color GlyphColorResult { get; set; }
+			public float Depth { get; set; }
+			public Color BackgroundColor { get; set; }
+			public int Glyph { get; set; }
+			public Color GlyphColor { get; set; }
 		}
 		
 		public abstract Data PerGlyph(Data input);

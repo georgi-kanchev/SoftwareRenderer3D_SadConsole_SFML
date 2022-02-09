@@ -8,7 +8,7 @@ namespace SMPL.Effects
 
 		public override Data PerGlyph(Data input)
 		{
-			input.BackgroundColorResult = Color;
+			input.BackgroundColor = Color;
 			return input;
 		}
 	}

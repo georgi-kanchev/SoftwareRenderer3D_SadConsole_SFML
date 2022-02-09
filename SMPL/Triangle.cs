@@ -184,6 +184,7 @@ namespace SMPL
 
 			var texWidth = image == null ? 1 : image.Size.X;
 			var texHeight = image == null ? 1 : image.Size.Y;
+			var pixelCount = 1;
 
 			if (p0y < p1y)
 			{
@@ -241,8 +242,9 @@ namespace SMPL
 							v += vstep;
 							w += wstep;
 							z += zstep;
+							pixelCount++;
 
-							Draw(x, y, u, v, w, z, x1, x2, p1y, p1y + (p2y - p1y), effects);
+							Draw(x, y, u, v, w, z, x1, x2, p1y, p1y + (p2y - p1y), pixelCount, effects);
 						}
 					}
 				}
@@ -304,14 +306,15 @@ namespace SMPL
 							v += vstep;
 							w += wstep;
 							z += zstep;
+							pixelCount++;
 
-							Draw(x, y, u, v, w, z, x1, x2, p1y, p1y + (p2y - p1y), effects);
+							Draw(x, y, u, v, w, z, x1, x2, p1y, p1y + (p2y - p1y), pixelCount, effects);
 						}
 					}
 				}
 			}
 
-			void Draw(int x, int y, float u, float v, float w, float z, float x1, float x2, float y1, float y2, List<Effect> effects)
+			void Draw(int x, int y, float u, float v, float w, float z, float x1, float x2, float y1, float y2, int count, List<Effect> effects)
 			{
 				var tu = Math.Clamp(u / w, 0, texWidth - 1);
 				var tv = Math.Clamp(v / w, 0, texHeight - 1);
@@ -324,6 +327,7 @@ namespace SMPL
 						(float)c.G * light.G / 255f / 255f,
 						(float)c.B * light.B / 255f / 255f,
 						(float)c.A * light.A / 255f / 255f);
+					var isVisible = color.A == 255;
 
 					if (effects == null || effects.Count == 0)
 					{
@@ -334,16 +338,15 @@ namespace SMPL
 					{
 						var result = new Effect.Data()
 						{
-							BackgroundColorPrevious = console.GetBackground(x, y),
-							BackgroundColorResult = color,
+							Image = image,
+							CurrentGlyphCount = pixelCount,
+							IsVisible = isVisible,
+							BackgroundColor = color,
 							CurrentPosition = new(x, y),
 							CurrentTexturePosition = new(tu, tv),
-							DepthPrevious = zBuffer[x, y],
-							DepthResult = z,
-							GlyphColorPrevious = console.GetForeground(x, y),
-							GlyphColorResult = Color.White,
-							GlyphPrevious = console.GetGlyph(x, y),
-							GlyphResult = 0,
+							Depth = z,
+							GlyphColor = Color.White,
+							Glyph = 0,
 							LineScreenStart = new(x1, y1),
 							LineScreenEnd = new(x2, y2),
 						};
@@ -351,9 +354,11 @@ namespace SMPL
 						{
 							result = effects[i].PerGlyph(result);
 							var p = new Point((int)result.CurrentPosition.X, (int)result.CurrentPosition.Y);
-							console.DrawLine(p, p, result.GlyphResult, result.GlyphColorResult, result.BackgroundColorResult);
+							if (result.IsVisible == false)
+								continue;
+							console.DrawLine(p, p, result.Glyph, result.GlyphColor, result.BackgroundColor);
 							if (p.X > 0 && p.X < zBuffer.GetLength(0) && p.Y > 0 && p.Y < zBuffer.GetLength(1))
-								zBuffer[p.X, p.Y] = result.DepthResult;
+								zBuffer[p.X, p.Y] = result.Depth;
 						}
 					}
 				}
