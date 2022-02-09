@@ -314,7 +314,8 @@ namespace SMPL
 				}
 			}
 
-			void Draw(int x, int y, float u, float v, float w, float z, float x1, float x2, float y1, float y2, int count, List<Effect> effects)
+			void Draw(int x, int y, float u, float v, float w, float z,
+				float x1, float x2, float y1, float y2, int count, List<Effect> effects)
 			{
 				var tu = Math.Clamp(u / w, 0, texWidth - 1);
 				var tv = Math.Clamp(v / w, 0, texHeight - 1);
@@ -338,12 +339,12 @@ namespace SMPL
 					{
 						var result = new Effect.Data()
 						{
+							CurrentGlyphCount = count,
 							Image = image,
-							CurrentGlyphCount = pixelCount,
 							IsVisible = isVisible,
 							BackgroundColor = color,
 							CurrentPosition = new(x, y),
-							CurrentTexturePosition = new(tu, tv),
+							CurrentImagePosition = new(tu, tv),
 							Depth = z,
 							GlyphColor = Color.White,
 							Glyph = 0,

@@ -21,7 +21,7 @@ namespace SMPL
 			get => dir;
 			set { dir = Vector3.Normalize(value); Update(); }
 		}
-		public Vector3 Scale { get; set; } = new(1, 1, 1);
+		public Vector3 Scale { get; set; } = new(10, 10, 10);
 
 		private void Update()
 		{

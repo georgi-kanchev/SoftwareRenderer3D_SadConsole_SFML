@@ -16,7 +16,7 @@ namespace SMPL
 			public Vector2 LineScreenEnd { get; set; }
 
 			public Vector2 CurrentPosition { get; set; }
-			public Vector2 CurrentTexturePosition { get; set; }
+			public Vector2 CurrentImagePosition { get; set; }
 			public int CurrentGlyphCount { get; set; }
 
 			public float Depth { get; set; }
