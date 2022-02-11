@@ -1,11 +1,23 @@
 ﻿using SadConsole;
 using SFML.Graphics;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 
 namespace SMPL
 {
+	public class MeshDrawDetails
+	{
+		public ICellSurface Surface { get; set; }
+		public Camera Camera { get; set; }
+		public bool BackSideIsVisible { get; set; }
+		public bool WireframeIsVisible { get; set; }
+		public bool DepthIsIgnored { get; set; }
+		public SadRogue.Primitives.Color WireframeColor { get; set; }
+		public List<Effect> Effects { get; set; }
+		public float[,] DepthBuffer { get; set; }
+	}
 	public class Mesh
 	{
 		public enum Shape { Quad, Cube, Pyramid, Sphere }
@@ -277,7 +289,7 @@ f 2/1/5 5/2/5 3/3/5
 f 4/1/6 1/2/6 3/3/6" }
 		};
 		internal Triangle[] triangles;
-		
+
 		public Area Area { get; } = new();
 		public Image Image
 		{
@@ -288,14 +300,29 @@ f 4/1/6 1/2/6 3/3/6" }
 					triangles[i].Image = value;
 			}
 		}
-
-
-		public void Draw(Console console = null, Camera camera = null, bool showBackSide = false, List<Effect> effects = null)
+		public MeshDrawDetails DrawDetails { get; set; } = new()
 		{
-			console ??= Simple.Console;
-			camera ??= Camera.Main;
+			BackSideIsVisible = false,
+			Camera = Camera.Main,
+			DepthBuffer = Triangle.zBuffer,
+			DepthIsIgnored = false,
+			Effects = null,
+			Surface = Simple.Console,
+			WireframeColor = SadRogue.Primitives.Color.White,
+			WireframeIsVisible = false
+		};
 
-			var zClippedTrigs = new List<Triangle>();
+		public void Draw()
+		{
+			var camera = DrawDetails.Camera ?? Camera.Main;
+			var surface = DrawDetails.Surface ?? Simple.Console;
+			var depthBuffer = DrawDetails.DepthBuffer ?? Triangle.zBuffer;
+			var backSide = DrawDetails.BackSideIsVisible;
+			var wireFrame = DrawDetails.WireframeIsVisible;
+			var ignoreZBuffer = DrawDetails.DepthIsIgnored;
+			var wireColor = DrawDetails.WireframeColor == default ? SadRogue.Primitives.Color.White : DrawDetails.WireframeColor;
+			var effects = DrawDetails.Effects;
+
 			for (int i = 0; i < triangles.Length; i++)
 			{
 				triangles[i].lightAmount = SadRogue.Primitives.Color.White;
@@ -304,19 +331,21 @@ f 4/1/6 1/2/6 3/3/6" }
 				triangles[i].ApplyLight(Light.Sun.ColorShadow, Light.Type.Ambient);
 				triangles[i].ApplyLight(Light.Sun.ColorLight, Light.Type.Directional);
 				triangles[i].AccountCamera(camera);
-
-				zClippedTrigs.AddRange(triangles[i].GetZClippedTriangles());
 			}
+
+			var zClippedTrigs = new List<Triangle>();
+			for (int i = 0; i < triangles.Length; i++)
+				zClippedTrigs.AddRange(triangles[i].GetZClippedTriangles());
 
 			for (int i = 0; i < zClippedTrigs.Count; i++)
 			{
-				zClippedTrigs[i].ApplyPerspective(console, camera);
+				zClippedTrigs[i].ApplyPerspective(surface, camera);
 				zClippedTrigs[i].CalculateNormalZ();
 				zClippedTrigs[i].FixAffineCoordinates();
 
-				var clippedTrigs = zClippedTrigs[i].GetClippedTriangles(console);
+				var clippedTrigs = zClippedTrigs[i].GetClippedTriangles(surface);
 				for (int j = 0; j < clippedTrigs.Length; j++)
-					clippedTrigs[j].Draw(console, clippedTrigs[j].Image, showBackSide == false, effects);
+					clippedTrigs[j].Draw(surface, clippedTrigs[j].Image, backSide == false, effects, depthBuffer, wireFrame, wireColor, ignoreZBuffer);
 			}
 		}
 
@@ -391,6 +420,48 @@ f 4/1/6 1/2/6 3/3/6" }
 				mesh.triangles[i / 3] = trig;
 			}
 			return mesh;
+		}
+
+		internal static List<Vector2> Outline(List<Vector2> points)
+		{
+			var result = new List<Vector2>();
+			foreach (var p in points)
+			{
+				if (result.Count == 0)
+					result.Add(p);
+				else
+				{
+					if (result[0].X > p.X)
+						result[0] = p;
+					else if (result[0].X == p.X)
+						if (result[0].Y > p.Y)
+							result[0] = p;
+				}
+			}
+			var counter = 0;
+			while (counter < result.Count)
+			{
+				var q = Next(points, result[counter]);
+				result.Add(q);
+				if (q == result[0] || result.Count > points.Count)
+					break;
+				counter++;
+
+				Vector2 Next(List<Vector2> points, Vector2 p)
+				{
+					Vector2 q = p;
+					int t;
+					foreach (Vector2 r in points)
+					{
+						t = ((q.X - p.X) * (r.Y - p.Y) - (r.X - p.X) * (q.Y - p.Y)).CompareTo(0);
+						if (t == -1 || t == 0 && Vector2.Distance(p, r) > Vector2.Distance(p, q))
+							q = r;
+					}
+					return q;
+				}
+			}
+			result.Add(result[0]);
+			return result;
 		}
 	}
 }

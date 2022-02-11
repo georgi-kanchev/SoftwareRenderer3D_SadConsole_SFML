@@ -2,6 +2,8 @@
 using Console = SadConsole.Console;
 using SFML.Graphics;
 using System.Numerics;
+using System;
+using System.Threading;
 
 namespace SMPL
 {
@@ -32,17 +34,16 @@ namespace SMPL
          Game.Instance.Dispose();
       }
 
-      public virtual void OnStart() { }
+		public virtual void OnStart() { }
       public virtual void OnUpdate() { }
       public virtual void OnStop() { }
 
       private static void Update(object sender, GameHost e)
       {
-         Console.Clear();
+         Console.Fill(background: Camera.Main.BackgroundColor);
          Time.Update();
          Triangle.ClearDepthBuffer();
          userGame.OnUpdate();
       }
-
 	}
 }

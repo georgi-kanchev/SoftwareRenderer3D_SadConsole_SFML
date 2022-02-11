@@ -9,11 +9,11 @@ namespace SMPL.Effects
 
 		public override Data PerGlyph(Data input)
 		{
-			var c = input.BackgroundColor;
+			var c = input.Color;
 			var target = new Vector4(Color.R / 255f, Color.G / 255f, Color.B / 255f, Color.A / 255f);
 			var result = new Vector4(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
 			result *= target;
-			input.BackgroundColor = new Color(result.X, result.Y, result.Z, result.W);
+			input.Color = new Color(result.X, result.Y, result.Z, result.W);
 			return input;
 		}
 	}

@@ -96,19 +96,27 @@ namespace SMPL
 		}
 		public static Vector3 Rotate(this Vector3 point, Vector3 rotation)
 		{
-			var result = new Vector3()
-			{
-				X = point.X * (Cos(rotation.Z) * Cos(rotation.Y)) +
-				point.Y * (Cos(rotation.Z) * Sin(rotation.Y) * Sin(rotation.X) - Sin(rotation.Z) * Cos(rotation.X)) +
-				point.Z * (Cos(rotation.Z) * Sin(rotation.Y) * Cos(rotation.X) + Sin(rotation.Z) * Sin(rotation.X)),
-				Y = point.X * (Sin(rotation.Z) * Cos(rotation.Y)) +
-				point.Y * (Sin(rotation.Z) * Sin(rotation.Y) * Sin(rotation.X) + Cos(rotation.Z) * Cos(rotation.X)) +
-				point.Z * (Sin(rotation.Z) * Sin(rotation.Y) * Cos(rotation.X) - Cos(rotation.Z) * Sin(rotation.X)),
-				Z = point.X * (-Sin(rotation.Y)) +
-				point.Y * (Cos(rotation.Y) * Sin(rotation.X)) +
-				point.Z * (Cos(rotation.Y) * Cos(rotation.X)),
-			};
-			return result;
+			// this is the new rotation code using quaternions, helps with the first person camera problems of gimbal lock
+			var v = point;
+			v = Vector3.Transform(v, Quaternion.CreateFromAxisAngle(new(0, 1, 0), rotation.Y));
+			v = Vector3.Transform(v, Quaternion.CreateFromAxisAngle(new(1, 0, 0), -rotation.X));
+			v = Vector3.Transform(v, Quaternion.CreateFromAxisAngle(new(0, 0, 1), rotation.Z));
+			return v;
+
+			// this is the old rotation code used by the BuildSucceeded tutorial
+			//var result = new Vector3()
+			//{
+			//	X = point.X * (Cos(rotation.Z) * Cos(rotation.Y)) +
+			//	point.Y * (Cos(rotation.Z) * Sin(rotation.Y) * Sin(rotation.X) - Sin(rotation.Z) * Cos(rotation.X)) +
+			//	point.Z * (Cos(rotation.Z) * Sin(rotation.Y) * Cos(rotation.X) + Sin(rotation.Z) * Sin(rotation.X)),
+			//	Y = point.X * (Sin(rotation.Z) * Cos(rotation.Y)) +
+			//	point.Y * (Sin(rotation.Z) * Sin(rotation.Y) * Sin(rotation.X) + Cos(rotation.Z) * Cos(rotation.X)) +
+			//	point.Z * (Sin(rotation.Z) * Sin(rotation.Y) * Cos(rotation.X) - Cos(rotation.Z) * Sin(rotation.X)),
+			//	Z = point.X * (-Sin(rotation.Y)) +
+			//	point.Y * (Cos(rotation.Y) * Sin(rotation.X)) +
+			//	point.Z * (Cos(rotation.Y) * Cos(rotation.X)),
+			//};
+			//return result;
 		}
 		public static Vector3 ApplyPerspective(this Vector3 point, float camResolutionX, float camFieldOfView)
 		{
@@ -515,6 +523,14 @@ namespace SMPL
 			percent = percent.Limit(0, 100, ChoiceLimit.ClosestBound);
 			var n = Random(1f, 100f); // should not roll 0 so it doesn't return true with 0% (outside of roll)
 			return n <= percent;
+		}
+		public static float ToRadians(this float degrees)
+		{
+			return (PI / 180) * degrees;
+		}
+		public static float ToDegrees(this float radians)
+		{
+			return radians * (180 / PI);
 		}
 
 		public static bool IsSigned(this int number)

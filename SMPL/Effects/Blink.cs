@@ -10,9 +10,9 @@ namespace SMPL.Effects
 
 		public override Data PerGlyph(Data input)
 		{
-			var c = input.BackgroundColor;
+			var c = input.Color;
 			var a = MathF.Sin((Time.GameClock + TimingOffset) * Speed).Map(-1, 1, TargetOpacity, 1);
-			input.BackgroundColor = new(c.R / 255f, c.G / 255f, c.B / 255f, a);
+			input.Color = new(c.R / 255f, c.G / 255f, c.B / 255f, a);
 
 			return input;
 		}

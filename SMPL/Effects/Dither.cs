@@ -13,7 +13,7 @@ namespace SMPL.Effects
 
 		public override Data PerGlyph(Data input)
 		{
-			if (input.BackgroundColor.A < 255)
+			if (input.Color.A < 255)
 				return input;
 
 			var p1 = input.CurrentPosition.X % (Pattern1 + 1);

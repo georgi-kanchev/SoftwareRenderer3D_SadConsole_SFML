@@ -50,7 +50,7 @@ namespace SMPL
 			{
 				var p = area.Position;
 				vertsGlobal[i].Position = vertsLocal[i].Position * new Vector3(area.Scale.X, -area.Scale.Y, area.Scale.Z);
-				vertsGlobal[i].Position = vertsGlobal[i].Position.Rotate(area.Rotation);
+				vertsGlobal[i].Position = vertsGlobal[i].Position.Rotate(area.rot); // this has to be .rot (radians), not .Rotation (degrees)
 				vertsGlobal[i].Position = vertsGlobal[i].Position.Translate(new Vector3(p.X, -p.Y, p.Z));
 			}
 		}
@@ -78,15 +78,16 @@ namespace SMPL
 			{
 				var p = -camera.Area.Position;
 				vertsCamera[i].Position = vertsGlobal[i].Position.Translate(new(p.X, -p.Y, p.Z));
-				vertsCamera[i].Position = vertsCamera[i].Position.Rotate(-camera.Area.Rotation);
+				vertsCamera[i].Position = vertsCamera[i].Position.Rotate(-camera.Area.rot); // this has to be .rot (radians), not .Rotation (degrees)
 			}
 		}
-		public void ApplyPerspective(Console console, Camera camera)
+		public void ApplyPerspective(ICellSurface surface, Camera camera)
 		{
 			for (int i = 0; i < 3; i++)
 			{
-				vertsCamera[i].Position = vertsCamera[i].Position.ApplyPerspective(console.Width, camera.FieldOfView);
-				vertsCamera[i].Position = vertsCamera[i].Position.CenterScreen(new(console.Width, console.Height));
+				if (camera.AppliesDepth)
+					vertsCamera[i].Position = vertsCamera[i].Position.ApplyPerspective(surface.Width, camera.FieldOfView);
+				vertsCamera[i].Position = vertsCamera[i].Position.CenterScreen(new(surface.Width, surface.Height));
 			}
 		}
 		public void CalculateNormalZ()
@@ -149,7 +150,8 @@ namespace SMPL
 				(lightAmount.A + lightToAdd.A * percentToApply * color.A / 255f) / 255f);
 		}
 
-		public void Draw(Console console, Image image, bool cull, List<Effect> effects = null)
+		public void Draw(ICellSurface surface, Image image, bool cull, List<Effect> effects, float[,] zBuffer, bool wireFrame, Color wireColor,
+			bool ignoreZBuffer)
 		{
 			if (cull && normalZ < 0)
 				return;
@@ -235,7 +237,7 @@ namespace SMPL
 						var zstep = (ze - zs) / (x2 - x1);
 						for (int x = x1; x <= x2; x++)
 						{
-							if (x < 0 || x >= console.Width || y < 0 || y >= console.Height || x > zBuffer.GetLength(0) - 1 || y > zBuffer.GetLength(1) - 1)
+							if (x < 0 || x >= surface.Width || y < 0 || y >= surface.Height || x >= zBuffer.GetLength(0) || y >= zBuffer.GetLength(1))
 								continue;
 
 							u += ustep;
@@ -299,7 +301,7 @@ namespace SMPL
 						var zstep = (ze - zs) / (x2 - x1);
 						for (int x = x1; x <= x2; x++)
 						{
-							if (x < 0 || x >= console.Width || y < 0 || y >= console.Height || x > zBuffer.GetLength(0) - 1 || y > zBuffer.GetLength(1) - 1)
+							if (x < 0 || x >= surface.Width || y < 0 || y >= surface.Height || x >= zBuffer.GetLength(0) || y >= zBuffer.GetLength(1))
 								continue;
 
 							u += ustep;
@@ -314,14 +316,20 @@ namespace SMPL
 				}
 			}
 
-			void Draw(int x, int y, float u, float v, float w, float z,
-				float x1, float x2, float y1, float y2, int count, List<Effect> effects)
+			if (wireFrame)
+			{
+				surface.DrawLine(new(p0x, p0y), new(p1x, p1y), null, null, wireColor);
+				surface.DrawLine(new(p1x, p1y), new(p2x, p2y), null, null, wireColor);
+				surface.DrawLine(new(p0x, p0y), new(p2x, p2y), null, null, wireColor);
+			}
+
+			void Draw(int x, int y, float u, float v, float w, float z, float x1, float x2, float y1, float y2,
+				int count, List<Effect> effects)
 			{
 				var tu = Math.Clamp(u / w, 0, texWidth - 1);
 				var tv = Math.Clamp(v / w, 0, texHeight - 1);
 				var c = image == null ? SFML.Graphics.Color.White : image.GetPixel((uint)tu, (uint)tv);
-				var zBuf = zBuffer[x, y];
-				if (zBuf == 0 || zBuf > z)
+				if (ignoreZBuffer || zBuffer[x, y] == 0 || zBuffer[x, y] > z)
 				{
 					var color = new Color(
 						(float)c.R * light.R / 255f / 255f,
@@ -332,17 +340,21 @@ namespace SMPL
 
 					if (effects == null || effects.Count == 0)
 					{
-						console.DrawLine(new(x, y), new(x, y), null, background: color);
+						surface.DrawLine(new(x, y), new(x, y), null, background: color);
 						zBuffer[x, y] = z;
 					}
 					else
 					{
 						var result = new Effect.Data()
 						{
+							TrianglePointScreenA = vertsCamera[0].Position,
+							TrianglePointScreenB = vertsCamera[1].Position,
+							TrianglePointScreenC = vertsCamera[2].Position,
+							Surface = surface,
 							CurrentGlyphCount = count,
 							Image = image,
 							IsVisible = isVisible,
-							BackgroundColor = color,
+							Color = color,
 							CurrentPosition = new(x, y),
 							CurrentImagePosition = new(tu, tv),
 							Depth = z,
@@ -357,9 +369,14 @@ namespace SMPL
 							var p = new Point((int)result.CurrentPosition.X, (int)result.CurrentPosition.Y);
 							if (result.IsVisible == false)
 								continue;
-							console.DrawLine(p, p, result.Glyph, result.GlyphColor, result.BackgroundColor);
-							if (p.X > 0 && p.X < zBuffer.GetLength(0) && p.Y > 0 && p.Y < zBuffer.GetLength(1))
-								zBuffer[p.X, p.Y] = result.Depth;
+							if (ignoreZBuffer || zBuffer[p.X, p.Y] == 0 || zBuffer[p.X, p.Y] > result.Depth)
+							{
+								surface.SetGlyph(p.X, p.Y, result.Glyph);
+								surface.SetForeground(p.X, p.Y, result.GlyphColor);
+								surface.SetBackground(p.X, p.Y, result.Color);
+								if (p.X > 0 && p.X < zBuffer.GetLength(0) && p.Y > 0 && p.Y < zBuffer.GetLength(1))
+									zBuffer[p.X, p.Y] = result.Depth;
+							}
 						}
 					}
 				}
@@ -473,7 +490,7 @@ namespace SMPL
 
 			return result.ToArray();
 		}
-		public Triangle[] GetClippedTriangles(Console console)
+		public Triangle[] GetClippedTriangles(ICellSurface surface)
 		{
 			var result = new Stack<Triangle>();
 			result.Push(new(vertsCamera[0], vertsCamera[1], vertsCamera[2], Image, normal, normalZ, lightAmount));
@@ -481,21 +498,18 @@ namespace SMPL
 			var _in = new List<Vertex>();
 			var _out = new List<Vertex>();
 
-			// sides of screen V
-
 			// left
 			for (int i = 0; i < result.Count; i++)
 			{
-				var currTriangle = result.Pop();
+				var currentTriangle = result.Pop();
 				_in.Clear();
 				_out.Clear();
 				for (int j = 0; j < 3; j++)
 				{
-					var vert = currTriangle.vertsCamera[j];
-					if (vert.Position.X < 0)
-						_out.Add(vert);
+					if (currentTriangle.vertsCamera[j].Position.X < 0)
+						_out.Add(currentTriangle.vertsCamera[j]);
 					else
-						_in.Add(vert);
+						_in.Add(currentTriangle.vertsCamera[j]);
 				}
 
 				if (_out.Count == 0)
@@ -564,14 +578,13 @@ namespace SMPL
 				_out.Clear();
 				for (int j = 0; j < 3; j++)
 				{
-					var vert = currentTriangle.vertsCamera[j];
-					if (vert.Position.X >= console.Width)
-						_out.Add(vert);
+					if (currentTriangle.vertsCamera[j].Position.X >= surface.Width - 1)
+						_out.Add(currentTriangle.vertsCamera[j]);
 					else
-						_in.Add(vert);
+						_in.Add(currentTriangle.vertsCamera[j]);
 				}
 
-				var w = console.Width - 1;
+				var w = surface.Width - 1;
 				if (_out.Count == 0)
 					result.Push(new(_in[0], _in[1], _in[2], Image, normal, normalZ, lightAmount));
 				else if (_out.Count == 1)
@@ -587,7 +600,6 @@ namespace SMPL
 							_out[0].TexCoords.Y + (w - _out[0].Position.X) * (_in[0].TexCoords.Y - _out[0].TexCoords.Y) / (_in[0].Position.X - _out[0].Position.X),
 							_out[0].TexCoords.Z + (w - _out[0].Position.X) * (_in[0].TexCoords.Z - _out[0].TexCoords.Z) / (_in[0].Position.X - _out[0].Position.X))
 					};
-
 					var extraPoint2 = new Vertex
 					{
 						Position = new(
@@ -640,11 +652,10 @@ namespace SMPL
 				_out.Clear();
 				for (int j = 0; j < 3; j++)
 				{
-					var vert = currentTriangle.vertsCamera[j];
-					if (vert.Position.Y < 0)
-						_out.Add(vert);
+					if (currentTriangle.vertsCamera[j].Position.Y < 0)
+						_out.Add(currentTriangle.vertsCamera[j]);
 					else
-						_in.Add(vert);
+						_in.Add(currentTriangle.vertsCamera[j]);
 				}
 				if (_out.Count == 0)
 					result.Push(new(_in[0], _in[1], _in[2], Image, normal, normalZ, lightAmount));
@@ -662,7 +673,6 @@ namespace SMPL
 						_out[0].TexCoords.Y - _out[0].Position.Y * (_in[0].TexCoords.Y - _out[0].TexCoords.Y) / (_in[0].Position.Y - _out[0].Position.Y),
 						_out[0].TexCoords.Z - _out[0].Position.Y * (_in[0].TexCoords.Z - _out[0].TexCoords.Z) / (_in[0].Position.Y - _out[0].Position.Y))
 					};
-
 					var extraPoint2 = new Vertex
 					{
 						Position = new(
@@ -714,13 +724,12 @@ namespace SMPL
 				_out.Clear();
 				for (int j = 0; j < 3; j++)
 				{
-					var vert = currentTriangle.vertsCamera[j];
-					if (vert.Position.Y >= console.Height)
-						_out.Add(vert);
+					if (currentTriangle.vertsCamera[j].Position.Y >= surface.Height - 1)
+						_out.Add(currentTriangle.vertsCamera[j]);
 					else
-						_in.Add(vert);
+						_in.Add(currentTriangle.vertsCamera[j]);
 				}
-				var h = console.Height - 1;
+				var h = surface.Height - 1;
 				if (_out.Count == 0)
 					result.Push(new(_in[0], _in[1], _in[2], Image, normal, normalZ, lightAmount));
 				else if (_out.Count == 1)
