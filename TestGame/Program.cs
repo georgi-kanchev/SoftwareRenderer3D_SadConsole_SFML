@@ -10,12 +10,12 @@ namespace TestGame
 		Mesh mesh;
 		Vector2 prevMousePos;
 
-		static void Main() => Start(new Program(), glyphWidth: 6, glyphHeight: 6);
+		static void Main() => Start(new Program(), glyphWidth: 4, glyphHeight: 4);
 		public override void OnStart()
 		{
-			mesh = Mesh.Load("dragon.obj", new("dragon.png"));
-			mesh.Area.Rotation = new(0, 90, 0);
-			mesh.Area.Scale = new(400, 400, 400);
+			mesh = Mesh.Load("map.obj", new("map.png"));
+			mesh.Area.Rotation = new(-90, 0, 0);
+			mesh.Area.Scale = new(1, 1, 1);
 			Camera.Main.BackgroundColor = Color.DarkCyan;
 		}
 
@@ -44,7 +44,6 @@ namespace TestGame
 			if (Keyboard.IsKeyPressed(Keyboard.Key.Z)) Camera.Main.FieldOfView-=2;
 			if (Keyboard.IsKeyPressed(Keyboard.Key.X)) Camera.Main.FieldOfView+=2;
 
-			mesh.Area.Position += mesh.Area.Forward;
 			mesh.Draw();
 		}
 	}

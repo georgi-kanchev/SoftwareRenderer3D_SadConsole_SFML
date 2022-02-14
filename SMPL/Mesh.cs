@@ -1,9 +1,9 @@
 ﻿using SadConsole;
 using SFML.Graphics;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using System.Threading.Tasks;
 
 namespace SMPL
 {
@@ -323,7 +323,7 @@ f 4/1/6 1/2/6 3/3/6" }
 			var wireColor = DrawDetails.WireframeColor == default ? SadRogue.Primitives.Color.White : DrawDetails.WireframeColor;
 			var effects = DrawDetails.Effects;
 
-			for (int i = 0; i < triangles.Length; i++)
+			var a = Parallel.For(0, triangles.Length, delegate (int i)
 			{
 				triangles[i].lightAmount = SadRogue.Primitives.Color.White;
 				triangles[i].UpdatePoints(Area);
@@ -331,22 +331,19 @@ f 4/1/6 1/2/6 3/3/6" }
 				triangles[i].ApplyLight(Light.Sun.ColorShadow, Light.Type.Ambient);
 				triangles[i].ApplyLight(Light.Sun.ColorLight, Light.Type.Directional);
 				triangles[i].AccountCamera(camera);
-			}
 
-			var zClippedTrigs = new List<Triangle>();
-			for (int i = 0; i < triangles.Length; i++)
-				zClippedTrigs.AddRange(triangles[i].GetZClippedTriangles());
+				var zClip = triangles[i].GetZClippedTriangles();
+				for (int k = 0; k < zClip.Length; k++)
+				{
+					zClip[k].ApplyPerspective(surface, camera);
+					zClip[k].CalculateNormalZ();
+					zClip[k].FixAffineCoordinates();
 
-			for (int i = 0; i < zClippedTrigs.Count; i++)
-			{
-				zClippedTrigs[i].ApplyPerspective(surface, camera);
-				zClippedTrigs[i].CalculateNormalZ();
-				zClippedTrigs[i].FixAffineCoordinates();
-
-				var clippedTrigs = zClippedTrigs[i].GetClippedTriangles(surface);
-				for (int j = 0; j < clippedTrigs.Length; j++)
-					clippedTrigs[j].Draw(surface, clippedTrigs[j].Image, backSide == false, effects, depthBuffer, wireFrame, wireColor, ignoreZBuffer);
-			}
+					var clippedTrigs = zClip[k].GetClippedTriangles(surface);
+					for (int j = 0; j < clippedTrigs.Length; j++)
+						clippedTrigs[j].Draw(surface, clippedTrigs[j].Image, backSide == false, effects, depthBuffer, wireFrame, wireColor, ignoreZBuffer);
+				}
+			});
 		}
 
 		public static Mesh Load(Shape shape, Image image = null)

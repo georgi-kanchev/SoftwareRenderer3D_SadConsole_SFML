@@ -4,7 +4,6 @@ using System.Numerics;
 using SFML.Graphics;
 using Color = SadRogue.Primitives.Color;
 using System;
-using Console = SadConsole.Console;
 using System.Collections.Generic;
 
 namespace SMPL
