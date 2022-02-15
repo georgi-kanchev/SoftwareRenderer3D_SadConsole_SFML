@@ -10,8 +10,8 @@ namespace SMPL
 {
 	internal struct Vertex
 	{
-		public Vector3 Position { get; set; }
-		public Vector3 TexCoords { get; set; }
+		public Vector3 Position;
+		public Vector3 TexCoords;
 
 		public Vertex(Vector3 pos, Vector3 texCoords)
 		{
@@ -22,6 +22,7 @@ namespace SMPL
 	internal class Triangle
 	{
 		internal static float[,] zBuffer;
+		internal static SadConsole.Console backBuffer;
 
 		public readonly Vertex[] vertsLocal;
 		public readonly Vertex[] vertsGlobal = new Vertex[3];
@@ -328,15 +329,14 @@ namespace SMPL
 				var tu = Math.Clamp(u / w, 0, texWidth - 1);
 				var tv = Math.Clamp(v / w, 0, texHeight - 1);
 				var c = image == null ? SFML.Graphics.Color.White : image.GetPixel((uint)tu, (uint)tv);
+				var color = new Color(
+					(float)c.R * light.R / 255f / 255f,
+					(float)c.G * light.G / 255f / 255f,
+					(float)c.B * light.B / 255f / 255f,
+					(float)c.A * light.A / 255f / 255f);
+				var isVisible = color.A == 255;
 				if (ignoreZBuffer || zBuffer[x, y] == 0 || zBuffer[x, y] > z)
 				{
-					var color = new Color(
-						(float)c.R * light.R / 255f / 255f,
-						(float)c.G * light.G / 255f / 255f,
-						(float)c.B * light.B / 255f / 255f,
-						(float)c.A * light.A / 255f / 255f);
-					var isVisible = color.A == 255;
-
 					if (effects == null || effects.Count == 0)
 					{
 						surface.DrawLine(new(x, y), new(x, y), null, background: color);

@@ -2,6 +2,7 @@
 using System.Numerics;
 using SFML.Window;
 using Color = SadRogue.Primitives.Color;
+using SMPL.Effects;
 
 namespace TestGame
 {

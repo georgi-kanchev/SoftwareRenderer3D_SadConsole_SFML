@@ -22,6 +22,8 @@ namespace SMPL
          Game.Create((int)resolutionWidth / glyphWidth, (int)resolutionHeight / glyphHeight, window: RenderWindowSFML);
          Console = (Console)GameHost.Instance.Screen;
          Console.FontSize = new(glyphWidth, glyphHeight);
+         Triangle.backBuffer = new(Console.Width, Console.Height);
+         Triangle.backBuffer.FontSize = new(glyphWidth, glyphHeight);
 
          Game.Instance.OnStart = userGame.OnStart;
          Game.Instance.OnEnd = userGame.OnStop;
@@ -40,10 +42,15 @@ namespace SMPL
 
       private static void Update(object sender, GameHost e)
       {
-         Console.Fill(background: Camera.Main.BackgroundColor);
          Time.Update();
+
+         Triangle.backBuffer.Fill(background: Camera.Main.BackgroundColor);
+         Console.Fill(background: Camera.Main.BackgroundColor);
+
          Triangle.ClearDepthBuffer();
          userGame.OnUpdate();
+
+         Triangle.backBuffer.Copy(Console);
       }
 	}
 }
