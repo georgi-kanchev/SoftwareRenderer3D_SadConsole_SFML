@@ -22,7 +22,6 @@ namespace SMPL
 	internal class Triangle
 	{
 		internal static float[,] zBuffer;
-		internal static SadConsole.Console backBuffer;
 
 		public readonly Vertex[] vertsLocal;
 		public readonly Vertex[] vertsGlobal = new Vertex[3];

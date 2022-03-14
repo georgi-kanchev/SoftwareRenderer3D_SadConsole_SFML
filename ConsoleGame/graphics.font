@@ -1,0 +1,9 @@
+﻿{
+   "$type": "SadConsole.SadFont, SadConsole",
+   "FilePath": "graphics.png",
+   "GlyphHeight": 32,
+   "GlyphPadding": 0,
+   "GlyphWidth": 32,
+   "Name": "graphics",
+   "SolidGlyphIndex": 1
+}

@@ -17,7 +17,7 @@ namespace TestGame
 			mesh = Mesh.Load("map.obj", new("map.png"));
 			mesh.Area.Rotation = new(-90, 0, 0);
 			mesh.Area.Scale = new(1, 1, 1);
-			Camera.Main.BackgroundColor = Color.DarkCyan;
+			Camera.Main.BackgroundColor = Color.SlateGray;
 		}
 
 		public override void OnUpdate()
@@ -45,6 +45,10 @@ namespace TestGame
 			if (Keyboard.IsKeyPressed(Keyboard.Key.Z)) Camera.Main.FieldOfView-=2;
 			if (Keyboard.IsKeyPressed(Keyboard.Key.X)) Camera.Main.FieldOfView+=2;
 
+			mesh.DrawDetails = new()
+			{
+				Effects = new() { new Dither() { Pattern1 = 5, Pattern2 = 3, Pattern3 = 2, Pattern4 = 5 } }
+			};
 			mesh.Draw();
 		}
 	}

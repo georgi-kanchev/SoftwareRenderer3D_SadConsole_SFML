@@ -3,7 +3,9 @@ using SFML.Graphics;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Numerics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SMPL
@@ -306,7 +308,7 @@ f 4/1/6 1/2/6 3/3/6" }
 		public void Draw()
 		{
 			var camera = DrawDetails.Camera ?? Camera.Main;
-			var surface = DrawDetails.Surface ?? Triangle.backBuffer;
+			var surface = DrawDetails.Surface ?? Simple.Console;
 			var depthBuffer = DrawDetails.DepthBuffer ?? Triangle.zBuffer;
 			var backSide = DrawDetails.BackSideIsVisible;
 			var wireFrame = DrawDetails.WireframeIsVisible;
@@ -314,8 +316,33 @@ f 4/1/6 1/2/6 3/3/6" }
 			var wireColor = DrawDetails.WireframeColor == default ? SadRogue.Primitives.Color.White : DrawDetails.WireframeColor;
 			var effects = DrawDetails.Effects;
 
+			//var zClippedTrigs = new List<Triangle>();
+			//for (int i = 0; i < triangles.Length; i++)
+			//{
+			//	triangles[i].lightAmount = SadRogue.Primitives.Color.White;
+			//	triangles[i].UpdatePoints(Area);
+			//	triangles[i].CalculateNormal();
+			//	triangles[i].ApplyLight(Light.Sun.ColorShadow, Light.Type.Ambient);
+			//	triangles[i].ApplyLight(Light.Sun.ColorLight, Light.Type.Directional);
+			//	triangles[i].AccountCamera(camera);
+			//
+			//	zClippedTrigs.AddRange(triangles[i].GetZClippedTriangles());
+			//}
+			//
+			//for (int i = 0; i < zClippedTrigs.Count; i++)
+			//{
+			//	zClippedTrigs[i].ApplyPerspective(surface, camera);
+			//	zClippedTrigs[i].CalculateNormalZ();
+			//	zClippedTrigs[i].FixAffineCoordinates();
+			//
+			//	var clippedTrigs = zClippedTrigs[i].GetClippedTriangles(surface);
+			//	for (int j = 0; j < clippedTrigs.Length; j++)
+			//		clippedTrigs[j].Draw(surface, clippedTrigs[j].Image, backSide == false, effects, depthBuffer, wireFrame, wireColor, ignoreZBuffer);
+			//}
+
 			var zclip = new ConcurrentDictionary<int, Triangle[]>();
 			Parallel.For(0, triangles.Length, delegate (int i)
+			//for (int i = 0; i < triangles.Length; i++)
 			{
 				var trig = triangles[i];
 				trig.lightAmount = SadRogue.Primitives.Color.White;
@@ -324,7 +351,7 @@ f 4/1/6 1/2/6 3/3/6" }
 				trig.ApplyLight(Light.Sun.ColorShadow, Light.Type.Ambient);
 				trig.ApplyLight(Light.Sun.ColorLight, Light.Type.Directional);
 				trig.AccountCamera(camera);
-
+			
 				var zClip = trig.GetZClippedTriangles();
 				for (int k = 0; k < zClip.Length; k++)
 				{
@@ -332,13 +359,18 @@ f 4/1/6 1/2/6 3/3/6" }
 					ztrig.ApplyPerspective(surface, camera);
 					ztrig.CalculateNormalZ();
 					ztrig.FixAffineCoordinates();
-
-					zclip[i + k] = ztrig.GetClippedTriangles(surface);
+			
+					//zclip[i + k] = ztrig.GetClippedTriangles(surface);
+			
+					var clip = ztrig.GetClippedTriangles(surface);
+					for (int j = 0; j < clip.Length; j++)
+						clip[j].Draw(surface, clip[j].Image, backSide == false, effects, depthBuffer, wireFrame, wireColor, ignoreZBuffer);
 				}
 			});
-			foreach (var kvp in zclip)
-				foreach (var trig in kvp.Value)
-					trig.Draw(surface, trig.Image, backSide == false, effects, depthBuffer, wireFrame, wireColor, ignoreZBuffer);
+
+			//foreach (var kvp in zclip)
+			//	for (int i = 0; i < kvp.Value.Length; i++)
+			//		kvp.Value[i].Draw(surface, kvp.Value[i].Image, backSide == false, effects, depthBuffer, wireFrame, wireColor, ignoreZBuffer);
 		}
 
 		public static Mesh Load(Shape shape, Image image = null)

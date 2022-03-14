@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "y7/nT6WTJKwrzTEVB8enUJy2lllihPBExPtRISz6e88RpGEmk6a+kfSQz6UXWAOGPp37WhwPOHK+rAH01qiu2Q==",
+  "dgSpecHash": "UwBkw1vibU59SFdhENatCzbSOf9m7xBwPkIz5/oXvQFTPVfltPnZBtxoAzRGiZ1aMO8nMj43TCdYJV8m7p4/TA==",
   "success": true,
   "projectFilePath": "D:\\code\\SadConsole\\TestGame\\TestGame.csproj",
   "expectedPackageFiles": [
@@ -15,7 +15,8 @@
     "C:\\Users\\PC PC\\.nuget\\packages\\sfml.system\\2.5.0\\sfml.system.2.5.0.nupkg.sha512",
     "C:\\Users\\PC PC\\.nuget\\packages\\sfml.window\\2.5.0\\sfml.window.2.5.0.nupkg.sha512",
     "C:\\Users\\PC PC\\.nuget\\packages\\thesadrogue.primitives\\1.1.1\\thesadrogue.primitives.1.1.1.nupkg.sha512",
-    "C:\\Users\\PC PC\\.nuget\\packages\\thesadrogue.primitives.sfml\\1.0.0\\thesadrogue.primitives.sfml.1.0.0.nupkg.sha512"
+    "C:\\Users\\PC PC\\.nuget\\packages\\thesadrogue.primitives.sfml\\1.0.0\\thesadrogue.primitives.sfml.1.0.0.nupkg.sha512",
+    "C:\\Users\\PC PC\\.nuget\\packages\\microsoft.netcore.app.host.win-x86\\5.0.14\\microsoft.netcore.app.host.win-x86.5.0.14.nupkg.sha512"
   ],
   "logs": []
 }
