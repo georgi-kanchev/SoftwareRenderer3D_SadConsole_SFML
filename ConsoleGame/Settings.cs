@@ -1,10 +1,8 @@
 ﻿using SadConsole;
-using SadConsole.UI;
-using SadRogue.Primitives;
+using SadConsole.UI.Themes;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
-using System;
 using Console = SadConsole.Console;
 
 namespace ConsoleGame
@@ -13,7 +11,7 @@ namespace ConsoleGame
    {
       public enum Scene
       {
-         Game, GraphicsViewer
+         Menu, Game, MapEditor, GraphicsViewer
       }
 
       public const int CELLS_WIDTH = 20, CELLS_HEIGHT = 11;
@@ -52,6 +50,7 @@ namespace ConsoleGame
          Ground.Children.Add(AboveGround);
          Ground.Children.Add(UI);
 
+         Menu.Init();
          GraphicsViewer.Init();
       }
       private static void InitLayerConsole(Console console)
