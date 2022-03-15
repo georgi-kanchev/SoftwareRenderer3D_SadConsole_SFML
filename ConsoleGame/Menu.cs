@@ -4,6 +4,7 @@ using SadConsole.UI.Controls;
 using SadRogue.Primitives;
 using SadConsole.UI.Themes;
 using System.Collections.Generic;
+using System;
 
 namespace ConsoleGame
 {
@@ -16,16 +17,17 @@ namespace ConsoleGame
 			var theme = new ButtonLinesTheme();
 			var buttons = new List<Button>();
 
-			AddButton("PLAY");
-			AddButton("MAP EDITOR");
-			AddButton("SETTINGS");
-			AddButton("EXIT");
+			CreateButton("PLAY");
+			CreateButton("MAP EDITOR");
+			CreateButton("SETTINGS");
+			CreateButton("EXIT");
 
 			InitWindow();
 
-			window.Controls[3].MouseButtonClicked += OnExit;
+			window.Controls[0].MouseButtonClicked += OnPlay;
+			window.Controls[^1].MouseButtonClicked += OnExit;
 
-			void AddButton(string text)
+			void CreateButton(string text)
 			{
 				buttons.Add(new Button(16, 3) { Text = text, Position = new(2, buttons.Count * 3 + 1), Theme = theme, CanFocus = false });
 			}
@@ -41,6 +43,16 @@ namespace ConsoleGame
 			}
 		}
 
+		public static void Show()
+		{
+			window.Show();
+		}
+		private static void OnPlay(object sender, ControlBase.ControlMouseState e)
+		{
+			Settings.CurrentScene = Settings.Scene.Game;
+			window.Hide();
+			Game.WindowUI.Show();
+		}
 		private static void OnExit(object sender, ControlBase.ControlMouseState e)
 		{
 			Settings.Window.Close();

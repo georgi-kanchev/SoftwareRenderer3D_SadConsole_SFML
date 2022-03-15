@@ -26,15 +26,15 @@ namespace ConsoleGame
       private static void Main()
       {
          Window = new(new(1280, 704), "");
-         Game.Create(CELLS_WIDTH, CELLS_HEIGHT, window: Window);
+         SadConsole.Game.Create(CELLS_WIDTH, CELLS_HEIGHT, window: Window);
 
-         Game.Instance.LoadFont("graphics.font");
+         SadConsole.Game.Instance.LoadFont("graphics.font");
          SadConsole.Settings.ResizeMode = SadConsole.Settings.WindowResizeOptions.Stretch;
-         Game.Instance.OnStart = Init;
-         Game.Instance.FrameUpdate += Update;
+         SadConsole.Game.Instance.OnStart = Init;
+         SadConsole.Game.Instance.FrameUpdate += Update;
 
-         Game.Instance.Run();
-         Game.Instance.Dispose();
+         SadConsole.Game.Instance.Run();
+         SadConsole.Game.Instance.Dispose();
       }
 
 		private static void Init()
@@ -51,11 +51,12 @@ namespace ConsoleGame
          Ground.Children.Add(UI);
 
          Menu.Init();
+         Game.Init();
          GraphicsViewer.Init();
       }
       private static void InitLayerConsole(Console console)
       {
-         console.Font = Game.Instance.Fonts["graphics"];
+         console.Font = SadConsole.Game.Instance.Fonts["graphics"];
          console.FontSize = new(64, 64);
       }
 		private static void Update(object sender, GameHost e)

@@ -11,7 +11,7 @@ namespace ConsoleGame
 
       public static void Init()
       {
-         Game.Instance.FrameUpdate += Update;
+         SadConsole.Game.Instance.FrameUpdate += Update;
          Settings.Window.MouseWheelScrolled += OnScroll;
       }
 
