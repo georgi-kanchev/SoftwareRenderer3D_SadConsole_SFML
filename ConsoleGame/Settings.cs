@@ -17,9 +17,14 @@ namespace ConsoleGame
       public const int CELLS_WIDTH = 20, CELLS_HEIGHT = 11;
 
       public static RenderWindow Window { get; set; }
+
       public static Console Ground { get; set; }
       public static Console AboveGround { get; set; }
+      public static Console Units { get; set; }
+      public static Console AboveUnits { get; set; }
       public static Console UI { get; set; }
+
+
       public static Scene CurrentScene { get; set; }
       public static Vector2i MousePositionCell { get; private set; }
 
@@ -41,18 +46,25 @@ namespace ConsoleGame
       {
          Ground = (Console)GameHost.Instance.Screen;
          AboveGround = new(CELLS_WIDTH, CELLS_HEIGHT);
+         Units = new(CELLS_WIDTH, CELLS_HEIGHT);
+         AboveUnits = new(CELLS_WIDTH, CELLS_HEIGHT);
          InitLayerConsole(Ground);
          InitLayerConsole(AboveGround);
+         InitLayerConsole(Units);
+         InitLayerConsole(AboveUnits);
 
          UI = new(CELLS_WIDTH * 4, CELLS_HEIGHT);
          UI.FontSize = new(16, 32);
 
          Ground.Children.Add(AboveGround);
+         Ground.Children.Add(Units);
+         Ground.Children.Add(AboveUnits);
          Ground.Children.Add(UI);
 
          Menu.Init();
          Game.Init();
          GraphicsViewer.Init();
+         PlayerInput.Init();
       }
       private static void InitLayerConsole(Console console)
       {
@@ -68,6 +80,8 @@ namespace ConsoleGame
 
          Ground.Clear();
          AboveGround.Clear();
+         Units.Clear();
+         AboveUnits.Clear();
          UI.Clear();
 		}
    }

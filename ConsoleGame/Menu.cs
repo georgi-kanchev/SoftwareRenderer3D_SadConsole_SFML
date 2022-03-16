@@ -25,6 +25,7 @@ namespace ConsoleGame
 			InitWindow();
 
 			window.Controls[0].MouseButtonClicked += OnPlay;
+			window.Controls[1].MouseButtonClicked += OnMapEditor;
 			window.Controls[^1].MouseButtonClicked += OnExit;
 
 			void CreateButton(string text)
@@ -52,6 +53,11 @@ namespace ConsoleGame
 			Settings.CurrentScene = Settings.Scene.Game;
 			window.Hide();
 			Game.WindowUI.Show();
+		}
+		private static void OnMapEditor(object sender, ControlBase.ControlMouseState e)
+		{
+			Settings.CurrentScene = Settings.Scene.GraphicsViewer;
+			window.Hide();
 		}
 		private static void OnExit(object sender, ControlBase.ControlMouseState e)
 		{

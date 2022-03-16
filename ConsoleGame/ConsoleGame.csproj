@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\DODO\Dodo\Gear.cs" Link="Gear.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="SadConsole" Version="9.2.2" />
     <PackageReference Include="SadConsole.Host.SFML" Version="9.2.1" />
   </ItemGroup>
